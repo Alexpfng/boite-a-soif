@@ -3,6 +3,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { COL, FRAUNCES } from '../ui/theme';
 import { PHRASES, type Phrase } from '../features/jukebox/phrases';
 import { parlerTavernier, tchin, capsule, cacahuete, bip, fanfare } from '../features/audio/sons';
+import { lirePropositions, ajouterProposition, likerProposition, retirerProposition, type Proposition } from '../features/jukebox/propositions';
 
 // Paires {fond, texte} pour garantir le contraste sur fond sombre.
 // On alterne selon l'index : rouge néon, or, ambre, ardoise.
@@ -46,6 +47,9 @@ export default function JukeBox() {
   const [ttsDispo, setTtsDispo] = useState<boolean>(voixDispo());
   // Réplique en cours de déclamation (retour visuel).
   const [enCours, setEnCours] = useState<string | null>(null);
+  // Répliques proposées par les piliers (boîte à idées locale).
+  const [repliques, setRepliques] = useState<Proposition[]>(() => lirePropositions());
+  const [nouvelle, setNouvelle] = useState('');
 
   useEffect(() => {
     setTtsDispo(voixDispo());
@@ -55,13 +59,18 @@ export default function JukeBox() {
   let indexGlobal = -1;
   const groupes = grouperParCategorie(PHRASES);
 
-  // Au clic sur une réplique : le tavernier déclame + un petit « tchin ».
-  const declamer = (p: Phrase) => {
-    const parle = parlerTavernier(p.texte);
+  // Déclame un texte : le tavernier parle + un petit « tchin ».
+  const declamerTexte = (texte: string) => {
+    const parle = parlerTavernier(texte);
     tchin();
-    setEnCours(p.texte);
-    window.setTimeout(() => setEnCours((c) => (c === p.texte ? null : c)), parle ? 2800 : 1600);
+    setEnCours(texte);
+    window.setTimeout(() => setEnCours((c) => (c === texte ? null : c)), parle ? 2800 : 1600);
   };
+  const declamer = (p: Phrase) => declamerTexte(p.texte);
+
+  const ajouterRep = () => { setRepliques(ajouterProposition(nouvelle)); setNouvelle(''); };
+  const likerRep = (id: string) => setRepliques(likerProposition(id));
+  const retirerRep = (id: string) => setRepliques(retirerProposition(id));
 
   return (
     <AppShell>
@@ -139,6 +148,41 @@ export default function JukeBox() {
           </div>
         </section>
       ))}
+
+      {/* ── Vos répliques : boîte à idées locale (propose / like) ── */}
+      <section style={{ margin: '30px 16px 0' }}>
+        <h2 className="pmu-titre" style={{ fontSize: '1.05rem', margin: '0 0 4px 2px' }}>🎙️ Vos répliques</h2>
+        <p style={{ margin: '0 0 12px 2px', fontSize: '0.86rem', color: COL.texte2, lineHeight: 1.45 }}>
+          Proposez vos meilleures vannes et likez celles des potes. <strong style={{ color: COL.or }}>La plus likée du mois</strong> rejoindra le juke-box. <span style={{ opacity: 0.8 }}>(Partage entre tous bientôt — pour l’instant c’est sur cet appareil.)</span>
+        </p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={nouvelle} onChange={(e) => setNouvelle(e.target.value)} placeholder="« Patron, remets-nous ça ! »"
+            style={{ flex: 1, minHeight: 50, padding: '10px 14px', fontSize: '0.95rem', background: '#14110F', border: `2px solid ${COL.bleu1}`, borderRadius: 12, color: COL.creme }} />
+          <button onClick={ajouterRep} className="pmu-arcade" style={{ padding: '0 16px', minHeight: 50 }}>Proposer</button>
+        </div>
+        {repliques.length === 0 ? (
+          <div style={{ marginTop: 14, background: COL.panneau, border: `2px dashed ${COL.bleu1}`, borderRadius: 14, padding: '18px 16px', textAlign: 'center', color: COL.texte2 }}>
+            Aucune réplique proposée. Lance la première légende du comptoir !
+          </div>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: '14px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {repliques.map((p, i) => (
+              <li key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: COL.panneau, border: `1px solid ${i === 0 && p.likes > 0 ? COL.or : COL.bleu1}`, borderRadius: 14, padding: '10px 12px' }}>
+                {i === 0 && p.likes > 0 && <span aria-hidden="true" title="En tête du mois">👑</span>}
+                <button onClick={() => declamerTexte(p.texte)} aria-label={`Déclamer : ${p.texte}`}
+                  style={{ flex: 1, textAlign: 'left', background: 'transparent', border: 'none', color: COL.creme, fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.3 }}>
+                  🔊 {p.texte}
+                </button>
+                <button onClick={() => likerRep(p.id)} disabled={p.dejaLike} aria-label="J’aime cette réplique"
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, minHeight: 40, padding: '0 12px', borderRadius: 10, border: `2px solid ${p.dejaLike ? COL.or : COL.bleu1}`, background: p.dejaLike ? 'rgba(233,196,106,0.15)' : 'transparent', color: p.dejaLike ? COL.or : COL.texte2, fontWeight: 800 }}>
+                  👍 {p.likes}
+                </button>
+                <button onClick={() => retirerRep(p.id)} aria-label="Supprimer" style={{ width: 34, height: 34, borderRadius: 9, border: 'none', background: COL.sable, color: COL.rouge, fontWeight: 700, fontSize: '1.1rem' }}>×</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* ── La table de mixage : les bruitages tout seuls ── */}
       <section style={{ margin: '30px 16px 0' }}>

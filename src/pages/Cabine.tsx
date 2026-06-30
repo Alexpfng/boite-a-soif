@@ -7,10 +7,20 @@ import { lireStockage, ecrireStockage } from '../lib/storage';
 import { etatBac, paramsIvresse, bredouiller } from '../features/pesealco/widmark';
 import { reponsePatron } from '../features/cabine/oracle';
 import { SIGNES, horoscopeDuJour, commentaireDerniere, etatPisse } from '../features/cabine/contenu';
+import { Entete } from './cabine/Cadre';
+import { Toasts } from './cabine/Toasts';
+import { MotDuJour } from './cabine/MotDuJour';
+import { Surnom } from './cabine/Surnom';
+import { Traducteur } from './cabine/Traducteur';
+import { Mytho } from './cabine/Mytho';
+import { Beauferie } from './cabine/Beauferie';
+import { QuiPaie } from './cabine/QuiPaie';
+import { SelfieFlou } from './cabine/SelfieFlou';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
-type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes';
+type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes'
+  | 'toasts' | 'motdujour' | 'surnom' | 'traducteur' | 'mytho' | 'beauferie' | 'quipaie' | 'selfie';
 
 export default function Cabine() {
   const navigate = useNavigate();
@@ -38,6 +48,14 @@ export default function Cabine() {
             <Tuile emoji="👵" titre="Détecteur de Belle-mère" desc="Déclenche un faux appel pour t’éclipser." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('bellemere')} />
             <Tuile emoji="🚽" titre="Le Pisse-mètre" desc="Compte tes allers-retours aux gogues." bg={COL.or} fg="#2A1F10" onClick={() => setVue('pisse')} />
             <Tuile emoji="🏆" titre="Le Mur des Légendes" desc="Les punchlines et exploits de la bande." bg="#14110F" fg={COL.creme} onClick={() => setVue('legendes')} />
+            <Tuile emoji="🥂" titre="La Machine à Toasts" desc="Un porté de santé prêt à déclamer." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('toasts')} />
+            <Tuile emoji="🕵️" titre="Le Détecteur de Mytho" desc="Vérité ou mytho ? Le polygraphe du comptoir tranche." bg={COL.or} fg="#2A1F10" onClick={() => setVue('mytho')} />
+            <Tuile emoji="📸" titre="Le Selfie Flou" desc="Ta vision selon ton taux. Plus tu bois, plus c’est flou." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('selfie')} />
+            <Tuile emoji="🎡" titre="La Roue « Qui paie ? »" desc="Le sort désigne qui régale la tournée." bg="#14110F" fg={COL.creme} onClick={() => setVue('quipaie')} />
+            <Tuile emoji="🏷️" titre="Le Générateur de Surnom" desc="Ton blaze de pilier de comptoir." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('surnom')} />
+            <Tuile emoji="📖" titre="Le Mot du Jour" desc="L’argot de comptoir, expliqué." bg={COL.or} fg="#2A1F10" onClick={() => setVue('motdujour')} />
+            <Tuile emoji="🎽" titre="Le Niveau de Beauferie" desc="Petit quiz : t’es plutôt hipster ou roi du barbeuc ?" bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('beauferie')} />
+            <Tuile emoji="🗣️" titre="Le Traducteur Régional" desc="Ta phrase en marseillais, ch’ti ou belge." bg="#14110F" fg={COL.creme} onClick={() => setVue('traducteur')} />
           </nav>
           <section style={{ margin: '24px 16px 0' }}>
             <div style={{ background: COL.orangeClair, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '14px 16px' }}>
@@ -63,6 +81,14 @@ export default function Cabine() {
       {vue === 'bellemere' && <BelleMere onRetour={() => setVue('menu')} />}
       {vue === 'pisse' && <Pisse onRetour={() => setVue('menu')} />}
       {vue === 'legendes' && <Legendes onRetour={() => setVue('menu')} />}
+      {vue === 'toasts' && <Toasts onRetour={() => setVue('menu')} />}
+      {vue === 'motdujour' && <MotDuJour onRetour={() => setVue('menu')} />}
+      {vue === 'surnom' && <Surnom onRetour={() => setVue('menu')} />}
+      {vue === 'traducteur' && <Traducteur onRetour={() => setVue('menu')} />}
+      {vue === 'mytho' && <Mytho onRetour={() => setVue('menu')} />}
+      {vue === 'beauferie' && <Beauferie onRetour={() => setVue('menu')} />}
+      {vue === 'quipaie' && <QuiPaie onRetour={() => setVue('menu')} />}
+      {vue === 'selfie' && <SelfieFlou onRetour={() => setVue('menu')} />}
     </AppShell>
   );
 }
@@ -82,15 +108,6 @@ function Tuile({ emoji, titre, desc, bg, fg, onClick }: {
         <span style={{ display: 'block', fontSize: '0.85rem', opacity: 0.9, marginTop: 2 }}>{desc}</span>
       </span>
     </button>
-  );
-}
-
-function Entete({ titre, onRetour }: { titre: string; onRetour: () => void }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 16px 0' }}>
-      <button onClick={onRetour} aria-label="Retour" style={{ width: 44, height: 44, borderRadius: 12, border: `2px solid ${COL.bleu1}`, background: COL.panneau, color: COL.or, fontSize: '1.2rem', fontWeight: 800 }}>‹</button>
-      <h2 className="pmu-titre" style={{ fontSize: '1.25rem' }}>{titre}</h2>
-    </div>
   );
 }
 

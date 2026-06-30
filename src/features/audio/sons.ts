@@ -108,6 +108,27 @@ export function fanfare() {
   [523, 659, 784, 1047].forEach((f, i) => note(f, t + i * 0.1, 0.18, 'square', 0.13));
 }
 
+/** Sonnerie de téléphone (« dring dring »), répétée. Retourne une fonction d'arrêt. */
+export function sonnerie(): () => void {
+  const ac = audio();
+  let actif = true;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const dring = () => {
+    if (!actif || !ac) return;
+    const t = ac.currentTime;
+    for (let k = 0; k < 4; k++) {
+      note(720, t + k * 0.14, 0.09, 'square', 0.2);
+      note(960, t + k * 0.14 + 0.07, 0.07, 'square', 0.16);
+    }
+  };
+  dring();
+  timer = setInterval(dring, 1600);
+  return () => {
+    actif = false;
+    if (timer) clearInterval(timer);
+  };
+}
+
 // ── Voix du tavernier (TTS grave) ──────────────────────────────────────────
 
 const aTTS = typeof window !== 'undefined' && 'speechSynthesis' in window;

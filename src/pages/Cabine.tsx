@@ -2,13 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { COL, FRAUNCES } from '../ui/theme';
-import { parlerTavernier } from '../features/audio/sons';
+import { parlerTavernier, vibrer, sonnerie } from '../features/audio/sons';
+import { lireStockage, ecrireStockage } from '../lib/storage';
 import { etatBac, paramsIvresse, bredouiller } from '../features/pesealco/widmark';
 import { reponsePatron } from '../features/cabine/oracle';
+import { SIGNES, horoscopeDuJour, commentaireDerniere, etatPisse } from '../features/cabine/contenu';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
-type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron';
+type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes';
 
 export default function Cabine() {
   const navigate = useNavigate();
@@ -31,6 +33,11 @@ export default function Cabine() {
             <Tuile emoji="🎤" titre="L’Éthylotest à souffle" desc="Souffle dans le micro… le verdict tombe." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('souffle')} />
             <Tuile emoji="📳" titre="Le test d’équilibre" desc="Tiens le téléphone immobile 5 secondes. On verra bien." bg={COL.or} fg="#2A1F10" onClick={() => setVue('equilibre')} />
             <Tuile emoji="🔮" titre="Demande au patron" desc="Pose ta question. Le patron tranche (à sa façon)." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('patron')} />
+            <Tuile emoji="🔭" titre="L’Horoscope du Pilier" desc="Ton signe, ta prédiction de comptoir du jour." bg={COL.or} fg="#2A1F10" onClick={() => setVue('horoscope')} />
+            <Tuile emoji="🤥" titre="Compteur « c’est ma dernière »" desc="Compte tes « dernières »… on n’est pas dupes." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('derniere')} />
+            <Tuile emoji="👵" titre="Détecteur de Belle-mère" desc="Déclenche un faux appel pour t’éclipser." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('bellemere')} />
+            <Tuile emoji="🚽" titre="Le Pisse-mètre" desc="Compte tes allers-retours aux gogues." bg={COL.or} fg="#2A1F10" onClick={() => setVue('pisse')} />
+            <Tuile emoji="🏆" titre="Le Mur des Légendes" desc="Les punchlines et exploits de la bande." bg="#14110F" fg={COL.creme} onClick={() => setVue('legendes')} />
           </nav>
           <section style={{ margin: '24px 16px 0' }}>
             <div style={{ background: COL.orangeClair, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '14px 16px' }}>
@@ -51,6 +58,11 @@ export default function Cabine() {
       {vue === 'souffle' && <Souffle onRetour={() => setVue('menu')} />}
       {vue === 'equilibre' && <Equilibre onRetour={() => setVue('menu')} />}
       {vue === 'patron' && <Patron onRetour={() => setVue('menu')} />}
+      {vue === 'horoscope' && <Horoscope onRetour={() => setVue('menu')} />}
+      {vue === 'derniere' && <Derniere onRetour={() => setVue('menu')} />}
+      {vue === 'bellemere' && <BelleMere onRetour={() => setVue('menu')} />}
+      {vue === 'pisse' && <Pisse onRetour={() => setVue('menu')} />}
+      {vue === 'legendes' && <Legendes onRetour={() => setVue('menu')} />}
     </AppShell>
   );
 }
@@ -333,6 +345,214 @@ function Patron({ onRetour }: { onRetour: () => void }) {
         <p style={{ margin: '16px 2px 0', fontSize: '0.8rem', color: COL.texte2, lineHeight: 1.5 }}>
           Le patron répond ce qu’il veut, quand il veut. La question, c’est surtout pour la forme.
         </p>
+      </section>
+    </>
+  );
+}
+
+// ── 4) L'Horoscope du Pilier ────────────────────────────────────────────────
+function Horoscope({ onRetour }: { onRetour: () => void }) {
+  const [signe, setSigne] = useState<string | null>(null);
+  const [texte, setTexte] = useState('');
+  function choisir(cle: string, nom: string) {
+    const t = horoscopeDuJour(cle);
+    setSigne(nom);
+    setTexte(t);
+    parlerTavernier(t, 0.55, 0.95);
+  }
+  return (
+    <>
+      <Entete titre="L’Horoscope du Pilier" onRetour={onRetour} />
+      <section style={{ margin: '14px 16px 0' }}>
+        {!signe ? (
+          <>
+            <p style={{ color: COL.texte2, margin: '0 2px 12px', lineHeight: 1.5 }}>Choisis ton signe, le comptoir lit ton avenir.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              {SIGNES.map((s) => (
+                <button key={s.cle} onClick={() => choisir(s.cle, s.nom)}
+                  style={{ background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 14, padding: '12px 4px', color: COL.creme, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: '1.6rem' }} aria-hidden="true">{s.emoji}</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>{s.nom}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="pmu-ardoise">
+            <div className="craie-2" style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{signe} · aujourd’hui</div>
+            <p className="craie" style={{ margin: '10px 0 0', fontFamily: FRAUNCES, fontSize: '1.2rem', lineHeight: 1.4 }}>{texte}</p>
+            <button onClick={() => setSigne(null)} className="pmu-arcade pmu-arcade--or" style={{ marginTop: 16, padding: '0 18px', minHeight: 48 }}>← Changer de signe</button>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
+// ── 5) Compteur « c'est ma dernière » ───────────────────────────────────────
+function Derniere({ onRetour }: { onRetour: () => void }) {
+  const [n, setN] = useState<number>(() => lireStockage<number>('cabine-derniere', 0));
+  function ajouter() {
+    const v = n + 1;
+    setN(v);
+    ecrireStockage('cabine-derniere', v);
+    parlerTavernier(commentaireDerniere(v), 0.5, 0.95);
+  }
+  function reset() { setN(0); ecrireStockage('cabine-derniere', 0); }
+  return (
+    <>
+      <Entete titre="« C’est ma dernière »" onRetour={onRetour} />
+      <section style={{ margin: '14px 16px 0', textAlign: 'center' }}>
+        <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '4.5rem', color: COL.rougeNeon, lineHeight: 1 }}>{n}</div>
+        <p style={{ color: COL.texte2, margin: '6px 0 0', minHeight: 40, lineHeight: 1.4 }}>{commentaireDerniere(n)}</p>
+        <button onClick={ajouter} className="pmu-arcade" style={{ width: '100%', marginTop: 18, minHeight: 70, fontSize: '1.05rem' }}>🤥 « C’est ma dernière ! »</button>
+        {n > 0 && (
+          <button onClick={reset} style={{ marginTop: 12, border: 'none', background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem', textDecoration: 'underline' }}>Remettre à zéro (nouvelle soirée)</button>
+        )}
+      </section>
+    </>
+  );
+}
+
+// ── 6) Détecteur de Belle-mère (faux appel) ─────────────────────────────────
+function BelleMere({ onRetour }: { onRetour: () => void }) {
+  const [appel, setAppel] = useState(false);
+  const [attente, setAttente] = useState<number | null>(null);
+  const ref = useRef<{ stop?: () => void; t1?: number; t2?: number }>({});
+
+  useEffect(() => () => cleanup(), []);
+  function cleanup() {
+    const r = ref.current;
+    if (r.stop) r.stop();
+    if (r.t1) window.clearTimeout(r.t1);
+    if (r.t2) window.clearInterval(r.t2);
+    ref.current = {};
+  }
+  function declencher() {
+    setAttente(null);
+    setAppel(true);
+    ref.current.stop = sonnerie();
+    vibrer([600, 300, 600, 300, 600, 300, 600]);
+  }
+  function programmer(sec: number) {
+    cleanup();
+    setAppel(false);
+    if (sec <= 0) { declencher(); return; }
+    setAttente(sec);
+    ref.current.t2 = window.setInterval(() => setAttente((a) => (a && a > 1 ? a - 1 : a)), 1000);
+    ref.current.t1 = window.setTimeout(() => { if (ref.current.t2) window.clearInterval(ref.current.t2); declencher(); }, sec * 1000);
+  }
+  function raccrocher() { cleanup(); setAppel(false); setAttente(null); }
+
+  if (appel) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 70, background: '#0c0a09', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '64px 24px 54px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,.7)', letterSpacing: '0.05em' }}>Appel entrant…</div>
+          <div style={{ fontSize: '5rem', marginTop: 24 }} aria-hidden="true">👵</div>
+          <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '2rem', color: '#fff', marginTop: 14 }}>Belle-maman</div>
+          <div style={{ color: 'rgba(255,255,255,.6)', marginTop: 4 }}>mobile</div>
+        </div>
+        <div style={{ display: 'flex', gap: 56 }}>
+          <button onClick={raccrocher} aria-label="Refuser l’appel" style={{ width: 74, height: 74, borderRadius: '50%', border: 'none', background: '#E1503A', color: '#fff', fontSize: '1.8rem' }}>✕</button>
+          <button onClick={raccrocher} aria-label="Décrocher" style={{ width: 74, height: 74, borderRadius: '50%', border: 'none', background: '#2E8540', color: '#fff', fontSize: '1.8rem' }}>✓</button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <>
+      <Entete titre="Détecteur de Belle-mère" onRetour={onRetour} />
+      <section style={{ margin: '14px 16px 0', textAlign: 'center' }}>
+        <div style={{ fontSize: '3.4rem' }} aria-hidden="true">👵📞</div>
+        <p style={{ color: COL.texte2, margin: '8px 0 0', lineHeight: 1.5 }}>
+          Besoin d’une excuse pour filer ? Programme un <strong style={{ color: COL.texte }}>faux appel de Belle-maman</strong> :
+          range le téléphone, il sonnera tout seul. À toi de jouer la comédie.
+        </p>
+        {attente ? (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '3rem', color: COL.or }}>{attente}s</div>
+            <p style={{ color: COL.texte2 }}>Ça va sonner… range vite le téléphone !</p>
+            <button onClick={raccrocher} style={{ marginTop: 8, border: 'none', background: 'transparent', color: COL.texte2, fontWeight: 700, textDecoration: 'underline' }}>Annuler</button>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 20 }}>
+            <button onClick={() => programmer(0)} className="pmu-arcade" style={{ minHeight: 60 }}>Maintenant</button>
+            <button onClick={() => programmer(10)} className="pmu-arcade pmu-arcade--ambre" style={{ minHeight: 60 }}>Dans 10 s</button>
+            <button onClick={() => programmer(30)} className="pmu-arcade pmu-arcade--ambre" style={{ minHeight: 60 }}>Dans 30 s</button>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
+// ── 7) Le Pisse-mètre ───────────────────────────────────────────────────────
+function Pisse({ onRetour }: { onRetour: () => void }) {
+  const [n, setN] = useState<number>(() => lireStockage<number>('cabine-pisse', 0));
+  const e = etatPisse(n);
+  function ajouter() { const v = n + 1; setN(v); ecrireStockage('cabine-pisse', v); }
+  function reset() { setN(0); ecrireStockage('cabine-pisse', 0); }
+  return (
+    <>
+      <Entete titre="Le Pisse-mètre" onRetour={onRetour} />
+      <section style={{ margin: '14px 16px 0', textAlign: 'center' }}>
+        <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '4.5rem', color: COL.or, lineHeight: 1 }}>{n}</div>
+        <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.2rem', color: COL.creme, marginTop: 8 }}>{e.badge}</div>
+        <p style={{ color: COL.texte2, margin: '4px 0 0' }}>{e.mot}</p>
+        <button onClick={ajouter} className="pmu-arcade pmu-arcade--ambre" style={{ width: '100%', marginTop: 18, minHeight: 70, fontSize: '1.05rem' }}>🚽 J’y vais !</button>
+        {n > 0 && (
+          <button onClick={reset} style={{ marginTop: 12, border: 'none', background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem', textDecoration: 'underline' }}>Remettre à zéro (nouvelle soirée)</button>
+        )}
+      </section>
+    </>
+  );
+}
+
+// ── 8) Le Mur des Légendes ──────────────────────────────────────────────────
+function Legendes({ onRetour }: { onRetour: () => void }) {
+  const [liste, setListe] = useState<string[]>(() => lireStockage<string[]>('cabine-legendes', []));
+  const [texte, setTexte] = useState('');
+  function graver() {
+    const t = texte.trim();
+    if (!t) return;
+    const suivant = [t, ...liste].slice(0, 100);
+    setListe(suivant);
+    ecrireStockage('cabine-legendes', suivant);
+    setTexte('');
+  }
+  function retirer(idx: number) {
+    const suivant = liste.filter((_, k) => k !== idx);
+    setListe(suivant);
+    ecrireStockage('cabine-legendes', suivant);
+  }
+  return (
+    <>
+      <Entete titre="Le Mur des Légendes" onRetour={onRetour} />
+      <section style={{ margin: '14px 16px 0' }}>
+        <p style={{ color: COL.texte2, margin: '0 2px 12px', lineHeight: 1.5 }}>Grave les punchlines et exploits de la bande. Pour la postérité.</p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={texte} onChange={(ev) => setTexte(ev.target.value)} placeholder="« Dédé a payé une tournée ! »"
+            style={{ flex: 1, minHeight: 50, padding: '10px 14px', fontSize: '0.95rem', background: '#14110F', border: `2px solid ${COL.bleu1}`, borderRadius: 12, color: COL.texte }} />
+          <button onClick={graver} className="pmu-arcade" style={{ padding: '0 16px', minHeight: 50 }}>Graver</button>
+        </div>
+        {liste.length === 0 ? (
+          <div style={{ marginTop: 16, background: COL.panneau, border: `2px dashed ${COL.bleu1}`, borderRadius: 14, padding: '20px 16px', textAlign: 'center', color: COL.texte2 }}>
+            Le mur est vide. La première légende reste à écrire…
+          </div>
+        ) : (
+          <div className="pmu-ardoise" style={{ marginTop: 16 }}>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {liste.map((l, i) => (
+                <li key={i} className="craie" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderBottom: i < liste.length - 1 ? '1px dashed rgba(243,232,207,0.2)' : 'none' }}>
+                  <span className="craie-accent" style={{ fontWeight: 800 }}>★</span>
+                  <span style={{ flex: 1, lineHeight: 1.4 }}>{l}</span>
+                  <button onClick={() => retirer(i)} aria-label="Effacer cette légende" style={{ border: 'none', background: 'transparent', color: 'rgba(243,232,207,0.6)', fontWeight: 700, fontSize: '1.1rem' }}>×</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
     </>
   );

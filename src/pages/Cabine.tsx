@@ -6,7 +6,7 @@ import { parlerTavernier, vibrer, sonnerie } from '../features/audio/sons';
 import { lireStockage, ecrireStockage } from '../lib/storage';
 import { etatBac, paramsIvresse, bredouiller } from '../features/pesealco/widmark';
 import { reponsePatron } from '../features/cabine/oracle';
-import { SIGNES, horoscopeDuJour, commentaireDerniere, etatPisse } from '../features/cabine/contenu';
+import { SIGNES, horoscopeDuJour, commentaireDerniere, etatPisse, type HoroDuJour } from '../features/cabine/contenu';
 import { Entete } from './cabine/Cadre';
 import { Toasts } from './cabine/Toasts';
 import { MotDuJour } from './cabine/MotDuJour';
@@ -16,11 +16,12 @@ import { Mytho } from './cabine/Mytho';
 import { Beauferie } from './cabine/Beauferie';
 import { QuiPaie } from './cabine/QuiPaie';
 import { SelfieFlou } from './cabine/SelfieFlou';
+import { Citations } from './cabine/Citations';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
 type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes'
-  | 'toasts' | 'motdujour' | 'surnom' | 'traducteur' | 'mytho' | 'beauferie' | 'quipaie' | 'selfie';
+  | 'toasts' | 'motdujour' | 'surnom' | 'traducteur' | 'mytho' | 'beauferie' | 'quipaie' | 'selfie' | 'citations';
 
 export default function Cabine() {
   const navigate = useNavigate();
@@ -55,7 +56,8 @@ export default function Cabine() {
             <Tuile emoji="🏷️" titre="Le Générateur de Surnom" desc="Ton blaze de pilier de comptoir." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('surnom')} />
             <Tuile emoji="📖" titre="Le Mot du Jour" desc="L’argot de comptoir, expliqué." bg={COL.or} fg="#2A1F10" onClick={() => setVue('motdujour')} />
             <Tuile emoji="🎽" titre="Le Niveau de Beauferie" desc="Petit quiz : t’es plutôt hipster ou roi du barbeuc ?" bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('beauferie')} />
-            <Tuile emoji="🗣️" titre="Le Traducteur Régional" desc="Ta phrase en marseillais, ch’ti ou belge." bg="#14110F" fg={COL.creme} onClick={() => setVue('traducteur')} />
+            <Tuile emoji="🗣️" titre="Le Traducteur Régional" desc="Ta phrase en marseillais, ch’ti, belge, toulousain ou breton." bg="#14110F" fg={COL.creme} onClick={() => setVue('traducteur')} />
+            <Tuile emoji="🍷" titre="Citations d’Ivrognes" desc="La sagesse (très relative) du comptoir." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('citations')} />
           </nav>
           <section style={{ margin: '24px 16px 0' }}>
             <div style={{ background: COL.orangeClair, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '14px 16px' }}>
@@ -89,6 +91,7 @@ export default function Cabine() {
       {vue === 'beauferie' && <Beauferie onRetour={() => setVue('menu')} />}
       {vue === 'quipaie' && <QuiPaie onRetour={() => setVue('menu')} />}
       {vue === 'selfie' && <SelfieFlou onRetour={() => setVue('menu')} />}
+      {vue === 'citations' && <Citations onRetour={() => setVue('menu')} />}
     </AppShell>
   );
 }
@@ -370,18 +373,19 @@ function Patron({ onRetour }: { onRetour: () => void }) {
 // ── 4) L'Horoscope du Pilier ────────────────────────────────────────────────
 function Horoscope({ onRetour }: { onRetour: () => void }) {
   const [signe, setSigne] = useState<string | null>(null);
-  const [texte, setTexte] = useState('');
+  const [horo, setHoro] = useState<HoroDuJour | null>(null);
   function choisir(cle: string, nom: string) {
-    const t = horoscopeDuJour(cle);
+    const h = horoscopeDuJour(cle);
     setSigne(nom);
-    setTexte(t);
-    parlerTavernier(t, 0.55, 0.95);
+    setHoro(h);
+    parlerTavernier(h.texte, 0.55, 0.95);
   }
+  const chip: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(243,232,207,0.08)', border: '1px solid rgba(243,232,207,0.25)', borderRadius: 999, padding: '6px 12px', fontSize: '0.82rem' };
   return (
     <>
       <Entete titre="L’Horoscope du Pilier" onRetour={onRetour} />
       <section style={{ margin: '14px 16px 0' }}>
-        {!signe ? (
+        {!signe || !horo ? (
           <>
             <p style={{ color: COL.texte2, margin: '0 2px 12px', lineHeight: 1.5 }}>Choisis ton signe, le comptoir lit ton avenir.</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
@@ -397,8 +401,12 @@ function Horoscope({ onRetour }: { onRetour: () => void }) {
         ) : (
           <div className="pmu-ardoise">
             <div className="craie-2" style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{signe} · aujourd’hui</div>
-            <p className="craie" style={{ margin: '10px 0 0', fontFamily: FRAUNCES, fontSize: '1.2rem', lineHeight: 1.4 }}>{texte}</p>
-            <button onClick={() => setSigne(null)} className="pmu-arcade pmu-arcade--or" style={{ marginTop: 16, padding: '0 18px', minHeight: 48 }}>← Changer de signe</button>
+            <p className="craie" style={{ margin: '10px 0 0', fontFamily: FRAUNCES, fontSize: '1.2rem', lineHeight: 1.4 }}>{horo.texte}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+              <span className="craie" style={chip}>🍹 Boisson porte-bonheur : {horo.boisson}</span>
+              <span className="craie" style={chip}>🍀 Chiffre chance : {horo.chance} tournée{horo.chance > 1 ? 's' : ''}</span>
+            </div>
+            <button onClick={() => { setSigne(null); setHoro(null); }} className="pmu-arcade pmu-arcade--or" style={{ marginTop: 16, padding: '0 18px', minHeight: 48 }}>← Changer de signe</button>
           </div>
         )}
       </section>

@@ -46,14 +46,79 @@ const QUESTIONS: { q: string; reponses: { texte: string; pts: number }[] }[] = [
       { texte: '🍨 La coupe Dame Blanche du PMU', pts: 2 },
     ],
   },
+  {
+    q: 'Les vacances de rêve ?',
+    reponses: [
+      { texte: '🏛️ Les musées de Florence', pts: 0 },
+      { texte: '⛰️ Une rando en montagne', pts: 1 },
+      { texte: '⛺ Camping clim, apéro-pétanque', pts: 2 },
+    ],
+  },
+  {
+    q: 'Ta voiture, c’est plutôt ?',
+    reponses: [
+      { texte: '🚲 Un vélo cargo électrique', pts: 0 },
+      { texte: '🚗 Une petite citadine pratique', pts: 1 },
+      { texte: '🌲 Tuning, sapin désodorisant et sono', pts: 2 },
+    ],
+  },
+  {
+    q: 'Le café du matin ?',
+    reponses: [
+      { texte: '🍵 Un matcha latte d’avoine', pts: 0 },
+      { texte: '☕ Un café serré, classique', pts: 1 },
+      { texte: '🥃 Café-calva, pour démarrer fort', pts: 2 },
+    ],
+  },
+  {
+    q: 'Le réveillon idéal ?',
+    reponses: [
+      { texte: '🍽️ Un resto étoilé en amoureux', pts: 0 },
+      { texte: '🎉 Une grosse soirée entre potes', pts: 1 },
+      { texte: '🪩 Cotillons et Patrick Sébastien', pts: 2 },
+    ],
+  },
+  {
+    q: 'Ton animal de compagnie ?',
+    reponses: [
+      { texte: '🐱 Un chat persan sur coussin', pts: 0 },
+      { texte: '🐕 Un bon gros labrador', pts: 1 },
+      { texte: '🐶 Un berger « qui mord pas… normalement »', pts: 2 },
+    ],
+  },
+  {
+    q: 'La déco du salon ?',
+    reponses: [
+      { texte: '🛋️ Scandinave, épurée', pts: 0 },
+      { texte: '🖼️ Cosy, quelques cadres', pts: 1 },
+      { texte: '🦌 La biche au coucher de soleil, encadrée', pts: 2 },
+    ],
+  },
+  {
+    q: 'Le pain au chocolat, ça se dit… ?',
+    reponses: [
+      { texte: '🤷 J’en sais rien, je mange salé', pts: 0 },
+      { texte: '🥐 Pain au chocolat, évidemment', pts: 1 },
+      { texte: '🥖 Chocolatine, et on n’en parle plus', pts: 2 },
+    ],
+  },
+  {
+    q: 'Le karaoké, tu chantes quoi ?',
+    reponses: [
+      { texte: '🎼 Rien, je préfère écouter', pts: 0 },
+      { texte: '🎤 Un classique de variété', pts: 1 },
+      { texte: '📣 « Les Lacs du Connemara », forcément', pts: 2 },
+    ],
+  },
 ];
 
-const MAX = QUESTIONS.length * 2; // 10
+const MAX = QUESTIONS.length * 2;
 
 function niveau(score: number): { emoji: string; titre: string } {
-  if (score < 4) return { emoji: '🧘', titre: 'Hipster au kombucha' };
-  if (score < 7) return { emoji: '😎', titre: 'Beauf du dimanche' };
-  if (score < 10) return { emoji: '🍖', titre: 'Roi du barbeuc en marcel' };
+  const pct = MAX ? score / MAX : 0;
+  if (pct < 0.3) return { emoji: '🧘', titre: 'Hipster au kombucha' };
+  if (pct < 0.55) return { emoji: '😎', titre: 'Beauf du dimanche' };
+  if (pct < 0.8) return { emoji: '🍖', titre: 'Roi du barbeuc en marcel' };
   return { emoji: '👑', titre: 'Légende du PMU' };
 }
 

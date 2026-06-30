@@ -19,22 +19,38 @@ export const SIGNES: Signe[] = [
 ];
 
 export const HOROSCOPES: string[] = [
-  'Aujourd’hui, le blanc-cass vous tend les bras. N’y résistez pas.',
-  'Mars est en pression : méfiez-vous des shooters après 23 h.',
-  'Une tournée gratuite croisera votre route. Tenez-vous prêt à dire merci.',
-  'Votre foie réclame une trêve. Vous ne l’écouterez pas. C’est noté.',
-  'Jour faste pour refaire le monde au comptoir. Le monde n’a rien demandé.',
-  'Vénus est mal lunée : ce soir, on ne texte PAS son ex.',
-  'Un Tonton va vous raconter LA blague. Riez, c’est plus court.',
-  'La chance vous sourit : le perdant paiera la tournée, et ce ne sera pas vous.',
-  'Évitez le karaoké ce soir. Vraiment. On vous aura prévenu.',
-  'Votre démarche sera approximative dès 22 h. Prévoyez un Sam.',
-  'Le pastis vous appelle. Décrochez, c’est poli.',
-  'Belle-maman rôde dans les parages. Gardez le détecteur sous le pouce.',
-  'Journée idéale pour exploser votre record de « c’est ma dernière ».',
-  'Un demi de trop, un éclat de rire de plus : le bilan reste positif.',
-  'Mercure est rétrograde, votre carte bleue aussi au moment de régler.',
-  'Vous brillerez en société… surtout à partir du troisième verre.',
+  'Les planètes s’alignent au-dessus du comptoir. Comme ton coude, d’ailleurs.',
+  'Saturne te conseille la modération. Saturne n’a jamais goûté un bon pastis.',
+  'Forte probabilité de tournée offerte entre 18 h et la fermeture.',
+  'Ton thème astral annonce un grand « refaire le monde ». Hydrate-toi avant.',
+  'Jupiter en maison 5 : victoire au juke-box. Le karaoké, lui, te trahira.',
+  'Un astre brille pour toi. C’est peut-être juste l’enseigne du bar d’en face.',
+  'Vénus susurre : ce soir, le téléphone reste au fond de la poche. L’ex aussi.',
+  'Mercure rétrograde : tu confondras « la dernière » et « l’avant-dernière ». Sept fois.',
+  'Belle énergie pour danser. Énergie catastrophique pour tenir debout.',
+  'Les augures sont formels : aujourd’hui, c’est demi-tarif… dans ta tête.',
+  'Ton ascendant est « comptoir ». Ça explique beaucoup de choses.',
+  'Pleine lune sur le zinc : tes blagues sembleront géniales. À toi tout seul.',
+  'Alignement rare : tu retrouveras tes clés. Pas ce soir, mais un jour.',
+  'Le cosmos t’invite à la prudence. Tu déclineras poliment l’invitation.',
+  'Chance maximale au baby-foot. Désastre annoncé aux fléchettes.',
+  'Ton charisme crève le plafond aujourd’hui. Le plafond, lui, tangue un peu.',
+  'Bonne nouvelle : quelqu’un d’autre régalera. Mauvaise : c’est sur l’ardoise.',
+  'Tu te feras un ami pour la vie. Enfin… pour environ deux heures précises.',
+  'Les étoiles recommandent un grand verre d’eau. Les étoiles sont raisonnables, elles.',
+  'Énergie de feu : évite le karaoké ET les briquets.',
+  'Jour parfait pour une grande décision. Reporte-la à jeun, on ne sait jamais.',
+  'Neptune trouble tes perceptions. Ou alors c’est juste le quatrième demi.',
+  'Ton aura sent bon le saucisson aujourd’hui. Assume pleinement.',
+  'La roue du destin tourne… comme la pièce de monnaie après le cinquième verre.',
+];
+
+// Boisson porte-bonheur du jour.
+const BOISSONS = [
+  'un demi pression', 'un ballon de rouge', 'un petit jaune', 'un picon-bière',
+  'un blanc-cass', 'un Monaco', 'un kir bien frais', 'un calva en douce',
+  'une Despé', 'un mauresque', 'une menthe à l’eau (courage)', 'un diabolo grenadine',
+  'un perroquet', 'un rhum arrangé maison',
 ];
 
 function hash(s: string): number {
@@ -43,10 +59,21 @@ function hash(s: string): number {
   return h;
 }
 
+export interface HoroDuJour {
+  texte: string;
+  boisson: string;
+  chance: number; // « chiffre chance » exprimé en tournées
+}
+
 /** Horoscope « du jour » : stable pour un signe sur la journée. */
-export function horoscopeDuJour(signe: string): string {
+export function horoscopeDuJour(signe: string): HoroDuJour {
   const jour = new Date().toISOString().slice(0, 10);
-  return HOROSCOPES[hash(jour + signe) % HOROSCOPES.length];
+  const h = hash(jour + signe);
+  return {
+    texte: HOROSCOPES[h % HOROSCOPES.length],
+    boisson: BOISSONS[(h >> 3) % BOISSONS.length],
+    chance: 1 + ((h >> 7) % 7),
+  };
 }
 
 const MSG_DERNIERE = [

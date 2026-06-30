@@ -54,6 +54,6 @@ const routes: RouteObject[] = [
   { path: '*',                      element: <S><NotFound /></S> },
 ];
 
-// basename = base Vite (ex. '/Bar-soif-' sur GitHub Pages, '/' en local).
+// basename = base Vite (ex. '/boite-a-soif' sur GitHub Pages, '/' en local).
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 export const router = createBrowserRouter(routes, { basename });

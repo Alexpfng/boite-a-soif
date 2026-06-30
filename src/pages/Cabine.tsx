@@ -21,16 +21,58 @@ import { NiveauABulle } from './cabine/NiveauABulle';
 import { Reflexes } from './cabine/Reflexes';
 import { Quiz } from './cabine/Quiz';
 import { BoussoleBars } from './cabine/BoussoleBars';
+import { Riviere } from './cabine/Riviere';
+import { NiveauPilier } from './cabine/NiveauPilier';
+import { lireXP, ajouterXP, niveauDepuisXP, XP_PAR_NIVEAU } from '../features/cabine/progression';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
 type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes'
   | 'toasts' | 'motdujour' | 'surnom' | 'traducteur' | 'mytho' | 'beauferie' | 'quipaie' | 'selfie' | 'citations'
-  | 'niveau' | 'reflexes' | 'quiz' | 'boussole';
+  | 'niveau' | 'reflexes' | 'quiz' | 'boussole' | 'riviere' | 'niveaupilier';
+
+interface TuileDef { vue: Vue; emoji: string; titre: string; desc: string; bg: string; fg: string }
+const CATEGORIES: { titre: string; emoji: string; jeux: TuileDef[] }[] = [
+  { titre: 'Jeux', emoji: '🎮', jeux: [
+    { vue: 'riviere', emoji: '🃏', titre: 'La Rivière', desc: 'Plus/moins à l’aller, rouge ou noir au retour. Tu te plantes, tu bois.', bg: COL.rougeNeon, fg: '#fff' },
+    { vue: 'quiz', emoji: '🧠', titre: 'Quiz Culture G de Bar', desc: '10 questions de comptoir. T’es calé ou pas ?', bg: COL.or, fg: '#2A1F10' },
+    { vue: 'beauferie', emoji: '🎽', titre: 'Le Niveau de Beauferie', desc: 'T’es plutôt hipster ou roi du barbeuc ?', bg: COL.ambre, fg: '#2A1F10' },
+    { vue: 'mytho', emoji: '🕵️', titre: 'Le Détecteur de Mytho', desc: 'Vérité ou mytho ? Le polygraphe tranche.', bg: '#14110F', fg: COL.creme },
+    { vue: 'quipaie', emoji: '🎡', titre: 'La Roue « Qui paie ? »', desc: 'Le sort désigne qui régale la tournée.', bg: COL.rougeNeon, fg: '#fff' },
+  ] },
+  { titre: 'Gadgets & faux outils', emoji: '🔧', jeux: [
+    { vue: 'souffle', emoji: '🎤', titre: 'L’Éthylotest à souffle', desc: 'Souffle dans le micro… le verdict tombe.', bg: COL.or, fg: '#2A1F10' },
+    { vue: 'equilibre', emoji: '📳', titre: 'Le test d’équilibre', desc: 'Tiens le téléphone immobile 5 secondes.', bg: COL.ambre, fg: '#2A1F10' },
+    { vue: 'niveau', emoji: '🫧', titre: 'Le Niveau à Bulle', desc: 'Es-tu encore bien droit ? Le téléphone juge.', bg: '#14110F', fg: COL.creme },
+    { vue: 'reflexes', emoji: '⚡', titre: 'Le Test de Réflexes', desc: 'Tape au vert. Le score chute avec les verres.', bg: COL.rougeNeon, fg: '#fff' },
+    { vue: 'selfie', emoji: '📸', titre: 'Le Selfie Flou', desc: 'Ta vision selon ton taux. Plus tu bois, plus c’est flou.', bg: COL.or, fg: '#2A1F10' },
+    { vue: 'pisse', emoji: '🚽', titre: 'Le Pisse-mètre', desc: 'Compte tes allers-retours aux gogues.', bg: COL.ambre, fg: '#2A1F10' },
+    { vue: 'bellemere', emoji: '👵', titre: 'Détecteur de Belle-mère', desc: 'Déclenche un faux appel pour t’éclipser.', bg: '#14110F', fg: COL.creme },
+    { vue: 'boussole', emoji: '🧭', titre: 'La Boussole à Bars', desc: 'Les bars autour + où le soleil tape pour la terrasse.', bg: COL.rougeNeon, fg: '#fff' },
+  ] },
+  { titre: 'Générateurs & oracles', emoji: '🎲', jeux: [
+    { vue: 'patron', emoji: '🔮', titre: 'Demande au patron', desc: 'Pose ta question. Le patron tranche (à sa façon).', bg: COL.or, fg: '#2A1F10' },
+    { vue: 'horoscope', emoji: '🔭', titre: 'L’Horoscope du Pilier', desc: 'Ton signe, ta prédiction de comptoir du jour.', bg: COL.ambre, fg: '#2A1F10' },
+    { vue: 'surnom', emoji: '🏷️', titre: 'Le Générateur de Surnom', desc: 'Ton blaze de pilier de comptoir.', bg: '#14110F', fg: COL.creme },
+    { vue: 'motdujour', emoji: '📖', titre: 'Le Mot du Jour', desc: 'L’argot de comptoir, expliqué.', bg: COL.rougeNeon, fg: '#fff' },
+    { vue: 'toasts', emoji: '🥂', titre: 'La Machine à Toasts', desc: 'Un porté de santé prêt à déclamer.', bg: COL.or, fg: '#2A1F10' },
+  ] },
+  { titre: 'Le terroir', emoji: '🗣️', jeux: [
+    { vue: 'traducteur', emoji: '🗣️', titre: 'Le Traducteur Régional', desc: '8 accents : marseillais, ch’ti, belge, corse, andalou…', bg: COL.ambre, fg: '#2A1F10' },
+    { vue: 'citations', emoji: '🍷', titre: 'Citations d’Ivrognes', desc: 'La sagesse (très relative) du comptoir.', bg: '#14110F', fg: COL.creme },
+  ] },
+  { titre: 'Légendes', emoji: '🏆', jeux: [
+    { vue: 'legendes', emoji: '🏆', titre: 'Le Mur des Légendes', desc: 'Les punchlines et exploits de la bande.', bg: COL.rougeNeon, fg: '#fff' },
+    { vue: 'derniere', emoji: '🤥', titre: 'Compteur « c’est ma dernière »', desc: 'Compte tes « dernières »… on n’est pas dupes.', bg: COL.or, fg: '#2A1F10' },
+  ] },
+];
 
 export default function Cabine() {
   const navigate = useNavigate();
   const [vue, setVue] = useState<Vue>('menu');
+  const [xp, setXp] = useState(() => lireXP());
+  const niv = niveauDepuisXP(xp);
+  const ouvrir = (v: Vue) => { setXp(ajouterXP(6)); setVue(v); };
 
   return (
     <AppShell>
@@ -45,29 +87,34 @@ export default function Cabine() {
 
       {vue === 'menu' && (
         <>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '18px 16px 0' }}>
-            <Tuile emoji="🎤" titre="L’Éthylotest à souffle" desc="Souffle dans le micro… le verdict tombe." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('souffle')} />
-            <Tuile emoji="📳" titre="Le test d’équilibre" desc="Tiens le téléphone immobile 5 secondes. On verra bien." bg={COL.or} fg="#2A1F10" onClick={() => setVue('equilibre')} />
-            <Tuile emoji="🔮" titre="Demande au patron" desc="Pose ta question. Le patron tranche (à sa façon)." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('patron')} />
-            <Tuile emoji="🔭" titre="L’Horoscope du Pilier" desc="Ton signe, ta prédiction de comptoir du jour." bg={COL.or} fg="#2A1F10" onClick={() => setVue('horoscope')} />
-            <Tuile emoji="🤥" titre="Compteur « c’est ma dernière »" desc="Compte tes « dernières »… on n’est pas dupes." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('derniere')} />
-            <Tuile emoji="👵" titre="Détecteur de Belle-mère" desc="Déclenche un faux appel pour t’éclipser." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('bellemere')} />
-            <Tuile emoji="🚽" titre="Le Pisse-mètre" desc="Compte tes allers-retours aux gogues." bg={COL.or} fg="#2A1F10" onClick={() => setVue('pisse')} />
-            <Tuile emoji="🏆" titre="Le Mur des Légendes" desc="Les punchlines et exploits de la bande." bg="#14110F" fg={COL.creme} onClick={() => setVue('legendes')} />
-            <Tuile emoji="🥂" titre="La Machine à Toasts" desc="Un porté de santé prêt à déclamer." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('toasts')} />
-            <Tuile emoji="🕵️" titre="Le Détecteur de Mytho" desc="Vérité ou mytho ? Le polygraphe du comptoir tranche." bg={COL.or} fg="#2A1F10" onClick={() => setVue('mytho')} />
-            <Tuile emoji="📸" titre="Le Selfie Flou" desc="Ta vision selon ton taux. Plus tu bois, plus c’est flou." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('selfie')} />
-            <Tuile emoji="🎡" titre="La Roue « Qui paie ? »" desc="Le sort désigne qui régale la tournée." bg="#14110F" fg={COL.creme} onClick={() => setVue('quipaie')} />
-            <Tuile emoji="🏷️" titre="Le Générateur de Surnom" desc="Ton blaze de pilier de comptoir." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('surnom')} />
-            <Tuile emoji="📖" titre="Le Mot du Jour" desc="L’argot de comptoir, expliqué." bg={COL.or} fg="#2A1F10" onClick={() => setVue('motdujour')} />
-            <Tuile emoji="🎽" titre="Le Niveau de Beauferie" desc="Petit quiz : t’es plutôt hipster ou roi du barbeuc ?" bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('beauferie')} />
-            <Tuile emoji="🗣️" titre="Le Traducteur Régional" desc="Ta phrase en marseillais, ch’ti, belge, toulousain ou breton." bg="#14110F" fg={COL.creme} onClick={() => setVue('traducteur')} />
-            <Tuile emoji="🍷" titre="Citations d’Ivrognes" desc="La sagesse (très relative) du comptoir." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('citations')} />
-            <Tuile emoji="🫧" titre="Le Niveau à Bulle" desc="Es-tu encore bien droit ? Le téléphone juge." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('niveau')} />
-            <Tuile emoji="⚡" titre="Le Test de Réflexes" desc="Tape au vert. Le score chute avec les verres." bg={COL.or} fg="#2A1F10" onClick={() => setVue('reflexes')} />
-            <Tuile emoji="🧠" titre="Quiz Culture G de Bar" desc="10 questions de comptoir. T’es calé ou pas ?" bg="#14110F" fg={COL.creme} onClick={() => setVue('quiz')} />
-            <Tuile emoji="🧭" titre="La Boussole à Bars" desc="Les bars autour + où le soleil tape pour la terrasse." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('boussole')} />
-          </nav>
+          <div style={{ margin: '18px 16px 0' }}>
+            <button onClick={() => setVue('niveaupilier')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: COL.panneau, border: `2px solid ${COL.or}`, borderRadius: 16, padding: '12px 14px', color: COL.creme, textAlign: 'left' }}>
+              <span style={{ fontSize: '1.9rem' }} aria-hidden="true">{niv.emoji}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: COL.texte2 }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Niv. {niv.niveau} · {niv.titre}</span>
+                  <span style={{ flexShrink: 0 }}>{niv.xpDansNiveau}/{XP_PAR_NIVEAU} XP</span>
+                </span>
+                <span style={{ display: 'block', background: 'rgba(243,232,207,0.12)', borderRadius: 999, height: 10, marginTop: 6, overflow: 'hidden' }}>
+                  <span style={{ display: 'block', width: `${niv.pct}%`, height: '100%', background: COL.or }} />
+                </span>
+              </span>
+              <span aria-hidden="true" style={{ color: COL.or, fontSize: '1.4rem' }}>›</span>
+            </button>
+          </div>
+
+          {CATEGORIES.map((cat) => (
+            <section key={cat.titre} style={{ margin: '22px 16px 0' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.15rem', color: COL.or, margin: '0 2px 10px' }}>
+                <span aria-hidden="true">{cat.emoji}</span> {cat.titre}
+              </h2>
+              <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {cat.jeux.map((j) => (
+                  <Tuile key={j.vue} emoji={j.emoji} titre={j.titre} desc={j.desc} bg={j.bg} fg={j.fg} onClick={() => ouvrir(j.vue)} />
+                ))}
+              </nav>
+            </section>
+          ))}
           <section style={{ margin: '24px 16px 0' }}>
             <div style={{ background: COL.orangeClair, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '14px 16px' }}>
               <p style={{ margin: 0, fontSize: '0.82rem', color: COL.texte2, lineHeight: 1.55 }}>
@@ -105,6 +152,8 @@ export default function Cabine() {
       {vue === 'reflexes' && <Reflexes onRetour={() => setVue('menu')} />}
       {vue === 'quiz' && <Quiz onRetour={() => setVue('menu')} />}
       {vue === 'boussole' && <BoussoleBars onRetour={() => setVue('menu')} />}
+      {vue === 'riviere' && <Riviere onRetour={() => setVue('menu')} />}
+      {vue === 'niveaupilier' && <NiveauPilier onRetour={() => setVue('menu')} />}
     </AppShell>
   );
 }

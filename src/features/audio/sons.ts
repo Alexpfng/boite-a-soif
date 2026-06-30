@@ -131,12 +131,12 @@ if (aTTS) {
   }
 }
 
-function vraimentParler(texte: string, pitch: number): void {
+function vraimentParler(texte: string, pitch: number, rate: number): void {
   const S = window.speechSynthesis;
   if (S.speaking || S.pending) S.cancel(); // on coupe une déclamation en cours
   const u = new SpeechSynthesisUtterance(texte);
   u.lang = 'fr-FR';
-  u.rate = 0.92;
+  u.rate = rate;
   u.pitch = pitch;
   if (!voixFr) chargerVoix();
   if (voixFr) u.voice = voixFr;
@@ -150,7 +150,7 @@ function vraimentParler(texte: string, pitch: number): void {
  * on attend `voiceschanged` (avec un filet de sécurité). Retourne false si la
  * synthèse vocale est totalement indisponible.
  */
-export function parlerTavernier(texte: string, pitch = 0.55): boolean {
+export function parlerTavernier(texte: string, pitch = 0.55, rate = 0.92): boolean {
   if (!aTTS) return false;
   const S = window.speechSynthesis;
 
@@ -161,14 +161,14 @@ export function parlerTavernier(texte: string, pitch = 0.55): boolean {
       fait = true;
       try { S.removeEventListener('voiceschanged', lancer); } catch { /* ignore */ }
       chargerVoix();
-      vraimentParler(texte, pitch);
+      vraimentParler(texte, pitch, rate);
     };
     try { S.addEventListener('voiceschanged', lancer); } catch { /* ignore */ }
     window.setTimeout(lancer, 350); // filet : certains navigateurs n'émettent jamais l'évènement
     return true;
   }
 
-  vraimentParler(texte, pitch);
+  vraimentParler(texte, pitch, rate);
   return true;
 }
 

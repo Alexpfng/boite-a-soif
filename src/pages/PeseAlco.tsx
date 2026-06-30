@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { COL, FRAUNCES, CARD_SHADOW } from '../ui/theme';
 import { IconeHautParleur } from '../ui/icons';
 import { usePeseAlco } from '../features/pesealco/usePeseAlco';
-import { PRESETS, formaterDuree, LIMITE_LEGALE, type Sexe } from '../features/pesealco/widmark';
+import { PRESETS, formaterDuree, LIMITE_LEGALE, paramsIvresse, bredouiller, type Sexe } from '../features/pesealco/widmark';
 import { parlerTavernier, capsule } from '../features/audio/sons';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
@@ -21,15 +22,16 @@ export default function PeseAlco() {
     bac, etat, msRetourZero, msSousLimite, sousLimite, totalGrammes,
   } = usePeseAlco();
 
+  const navigate = useNavigate();
   const [modalDanger, setModalDanger] = useState(false);
   const [nudge, setNudge] = useState<string | null>(null);
-  const etatPrec = useRef(etat.cle);
+  const dangerPrec = useRef(etat.danger);
 
   // Pop la modale d'alerte au moment où l'on bascule en zone danger.
   useEffect(() => {
-    if (etat.cle === 'danger' && etatPrec.current !== 'danger') setModalDanger(true);
-    etatPrec.current = etat.cle;
-  }, [etat.cle]);
+    if (etat.danger && !dangerPrec.current) setModalDanger(true);
+    dangerPrec.current = etat.danger;
+  }, [etat.danger]);
 
   const montrerNudge = (m: string) => {
     setNudge(m);
@@ -43,15 +45,17 @@ export default function PeseAlco() {
         .pa-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 999px; background: ${COL.bleu1}; outline-offset: 4px; }
         .pa-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 34px; height: 34px; border-radius: 12px; background: ${COL.or}; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.45); cursor: pointer; }
         .pa-slider::-moz-range-thumb { width: 34px; height: 34px; border-radius: 12px; background: ${COL.or}; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.45); cursor: pointer; }
-        @keyframes paPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); } 50% { box-shadow: 0 0 0 6px rgba(192,57,43,.28); } }
+        @keyframes paPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(225,75,58,0); } 50% { box-shadow: 0 0 0 6px rgba(225,75,58,.30); } }
+        @keyframes paIvre { 0%,100% { transform: rotate(-0.7deg); } 50% { transform: rotate(0.7deg); } }
         .pa-danger { animation: paPulse 1.4s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .pa-danger { animation: none; } }
+        .pa-ivre { animation: paPulse 1.4s ease-in-out infinite, paIvre 0.9s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .pa-danger, .pa-ivre { animation: none; } }
       `}</style>
 
       {/* ── Bandeau taux en direct (couleur pilotée par l'état) ── */}
       <section
         data-tone="bleu"
-        className={etat.cle === 'danger' ? 'pa-danger' : undefined}
+        className={bac >= 3 ? 'pa-ivre' : etat.danger ? 'pa-danger' : undefined}
         style={{ background: etat.fond, color: etat.texteSur, padding: '26px 22px 28px', position: 'relative', overflow: 'hidden' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.85 }}>
@@ -91,7 +95,7 @@ export default function PeseAlco() {
         </div>
 
         <button
-          onClick={() => parlerTavernier(etat.annonce)}
+          onClick={() => { const v = paramsIvresse(bac); parlerTavernier(bredouiller(etat.annonce, bac), v.pitch, v.rate); }}
           style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8, background: etat.accent, color: '#fff', border: 'none', borderRadius: 14, padding: '11px 16px', fontWeight: 700, fontSize: '0.92rem', minHeight: 48 }}
         >
           <IconeHautParleur size={20} color="#fff" />
@@ -107,11 +111,11 @@ export default function PeseAlco() {
       )}
 
       {/* ── Alerte permanente en zone chaude/danger ── */}
-      {etat.cle !== 'sobre' && (
+      {etat.alerte && (
         <section style={{ margin: '16px 16px 0' }}>
           <div style={{ background: COL.panneau, border: `2px solid ${etat.accent}`, borderRadius: 18, padding: '14px 16px' }}>
             <p style={{ margin: 0, fontWeight: 700, color: etat.accent, fontSize: '0.96rem' }}>
-              {etat.cle === 'danger' ? '🚨 Là, c’est chaud. On se pose.' : '⚠️ Ça monte. On lève le pied.'}
+              {etat.danger ? '🚨 Là, c’est chaud. On se pose.' : '⚠️ Ça monte. On lève le pied.'}
             </p>
             <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: COL.texte2, lineHeight: 1.5 }}>
               Un verre d’eau, un coup de fil à un taxi, et surtout : pas le volant.
@@ -226,7 +230,14 @@ export default function PeseAlco() {
         </div>
       </section>
 
-      <footer style={{ margin: '24px 22px 0', padding: '16px 0 8px', borderTop: '1px solid rgba(14,58,77,0.1)' }}>
+      {/* Lien vers l'analyse WHOOP-parodique */}
+      <section style={{ margin: '24px 16px 0' }}>
+        <button onClick={() => navigate('/analyse')} className="pmu-arcade pmu-arcade--ardoise" style={{ width: '100%' }}>
+          📊 Voir mon analyse de pilier
+        </button>
+      </section>
+
+      <footer style={{ margin: '24px 22px 0', padding: '16px 0 8px', borderTop: '1px solid rgba(243,232,207,0.14)' }}>
         <p style={{ margin: 0, fontSize: '0.82rem', color: COL.texte2 }}>
           À consommer avec modération. Le perdant paie quand même sa tournée.
         </p>

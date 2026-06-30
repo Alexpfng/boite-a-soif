@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { IconeMaison } from '../../ui/icons';
 import { COL } from '../../ui/theme';
 
-type Cle = 'pesealco' | 'jukebox' | 'accueil' | 'ardoise' | 'champions';
+type Cle = 'pesealco' | 'jukebox' | 'accueil' | 'ardoise' | 'champions' | 'analyse';
 
 function activeKey(pathname: string): Cle | null {
   if (pathname === '/app') return 'accueil';
@@ -10,6 +10,7 @@ function activeKey(pathname: string): Cle | null {
   if (pathname.startsWith('/juke-box')) return 'jukebox';
   if (pathname.startsWith('/ardoise')) return 'ardoise';
   if (pathname.startsWith('/champions')) return 'champions';
+  if (pathname.startsWith('/analyse')) return 'analyse';
   return null;
 }
 
@@ -34,6 +35,11 @@ const IcoTrophee = ({ c }: { c: string }) => (
     <path d="M8 21 H16" /><path d="M12 17 V21" /><path d="M6 4 H18 V8 C18 11.3 15.3 13.5 12 13.5 C8.7 13.5 6 11.3 6 8 Z" /><path d="M18 5 H21 V7.5 C21 9 20 10 18.5 10" /><path d="M6 5 H3 V7.5 C3 9 4 10 5.5 10" />
   </svg>
 );
+const IcoAnalyse = ({ c }: { c: string }) => (
+  <svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="6" y1="20" x2="6" y2="13" /><line x1="12" y1="20" x2="12" y2="8" /><line x1="18" y1="20" x2="18" y2="11" />
+  </svg>
+);
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -44,7 +50,7 @@ export function BottomNav() {
     flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
     border: 'none', background: active === cle ? 'rgba(255,255,255,0.16)' : 'transparent',
     borderRadius: 14, padding: '8px 2px', color: active === cle ? '#FFFFFF' : 'rgba(255,255,255,0.62)',
-    fontSize: '0.64rem', fontWeight: 600, minHeight: 56,
+    fontSize: '0.56rem', fontWeight: 600, minHeight: 56,
   });
   const couleur = (cle: Cle) => (active === cle ? '#FFFFFF' : 'rgba(255,255,255,0.62)');
 
@@ -60,7 +66,7 @@ export function BottomNav() {
         Juke-Box
       </button>
       <button onClick={() => navigate('/app')} aria-label="Accueil" aria-current={active === 'accueil' ? 'page' : undefined}
-        style={{ flex: 1.1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, border: 'none', background: 'transparent', padding: '0 2px', color: '#fff', fontSize: '0.64rem', fontWeight: 600 }}>
+        style={{ flex: 1.1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, border: 'none', background: 'transparent', padding: '0 2px', color: '#fff', fontSize: '0.56rem', fontWeight: 600 }}>
         <span style={{ width: 58, height: 58, borderRadius: '50%', background: active === 'accueil' ? COL.orange : COL.bleu7, border: `4px solid ${COL.bleu9}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -26, boxShadow: '0 4px 12px rgba(14,58,77,0.3)' }}>
           <IconeMaison size={26} />
         </span>
@@ -73,6 +79,10 @@ export function BottomNav() {
       <button onClick={() => navigate('/champions')} aria-label="Le Tableau des Champions" aria-current={active === 'champions' ? 'page' : undefined} style={tabStyle('champions')}>
         <IcoTrophee c={couleur('champions')} />
         Champions
+      </button>
+      <button onClick={() => navigate('/analyse')} aria-label="L’Analyse" aria-current={active === 'analyse' ? 'page' : undefined} style={tabStyle('analyse')}>
+        <IcoAnalyse c={couleur('analyse')} />
+        Analyse
       </button>
     </nav>
   );

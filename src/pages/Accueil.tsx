@@ -114,6 +114,24 @@ export default function Accueil() {
         <Comptoir bg={COL.ambre} fg="#2A1F10" onClick={() => navigate('/champions')} icon={<IcoTrophee c="#2A1F10" />} label="Le Tableau des Champions" />
       </nav>
 
+      {/* L'Analyse — bilan WHOOP parodique */}
+      <section style={{ margin: '12px 16px 0' }}>
+        <button onClick={() => navigate('/analyse')}
+          style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, background: COL.panneau, border: `2px solid ${COL.or}`, borderRadius: 18, padding: '16px 18px', color: COL.creme }}>
+          <span style={{ fontSize: '1.9rem' }} aria-hidden="true">📊</span>
+          <span style={{ flex: 1 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.05rem', color: COL.or }}>L&apos;Analyse</span>
+              <span style={{ background: COL.rougeNeon, color: '#fff', fontSize: '0.6rem', fontWeight: 800, borderRadius: 999, padding: '2px 8px', letterSpacing: '0.05em' }}>NOUVEAU</span>
+            </span>
+            <span style={{ display: 'block', fontSize: '0.84rem', color: COL.texte2, marginTop: 2 }}>
+              Ton bilan de pilier façon coach connecté… totalement à côté de la plaque.
+            </span>
+          </span>
+          <ChevronDroit color={COL.or} />
+        </button>
+      </section>
+
       {/* Sécurité / modération */}
       <section style={{ margin: '22px 16px 0' }}>
         <div style={{ background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '14px 16px' }}>

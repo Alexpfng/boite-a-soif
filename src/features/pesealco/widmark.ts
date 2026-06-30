@@ -117,7 +117,7 @@ export function formaterDuree(ms: number): string {
   return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
 }
 
-export type CleEtat = 'sobre' | 'chaud' | 'danger';
+export type CleEtat = 'frais' | 'joues' | 'chaud' | 'patois' | 'refait' | 'crabe' | 'legende';
 
 export interface EtatBac {
   cle: CleEtat;
@@ -127,51 +127,87 @@ export interface EtatBac {
   accent: string; // couleur d'accent (DA)
   fond: string; // fond doux du bandeau (DA)
   texteSur: string; // couleur du texte sur le fond
-  annonce: string; // phrase lue à voix haute par le "tavernier"
+  annonce: string; // phrase de base lue par le "tavernier" (avant bredouillage)
+  alerte: boolean; // ≥ 0,5 g/L : on rappelle « on lève le pied »
+  danger: boolean; // ≥ 1,5 g/L : pulsation rouge + modale d'alerte
 }
 
-// Couleurs sémantiques de la DA vintage, lisibles sur fond ardoise sombre.
-const VERT = '#9EC06B'; // vert vintage
-const ORANGE = '#EC9A4B'; // ambre (picon)
-const ROUGE = '#E14B3A'; // rouge néon
+// Couleurs de la DA vintage, lisibles sur fond ardoise sombre.
+const VERT = '#9EC06B';
+const OR = '#E9C46A';
+const ORANGE = '#EC9A4B';
+const ROUGE = '#E14B3A';
+const ROUGE_VIF = '#FF5A3C';
+const CREME = '#F3E8CF';
+
+interface Palier {
+  max: number;
+  cle: CleEtat;
+  titre: string;
+  sousTitre: string;
+  emoji: string;
+  accent: string;
+  fond: string;
+  annonce: string;
+}
+
+// Paliers d'ivresse, du plus frais au coma joyeux. Plus on boit, plus ça part.
+const PALIERS: Palier[] = [
+  { max: 0.5, cle: 'frais', titre: 'Frais comme un gardon', emoji: '😎', sousTitre: 'Tu tiens le comptoir droit. Bravo champion.', accent: VERT, fond: '#20281C', annonce: 'Frais comme un gardon. Tout va bien au comptoir.' },
+  { max: 1.0, cle: 'joues', titre: 'Les joues qui rosissent', emoji: '🙂', sousTitre: 'Ça se réchauffe gentiment. On savoure, tranquille.', accent: OR, fond: '#2A2517', annonce: 'Les joues qui rosissent. On est bien, là.' },
+  { max: 1.5, cle: 'chaud', titre: 'Picon-Chaud', emoji: '🥵', sousTitre: 'Le béret penche, la cravate aussi. On lève le pied.', accent: ORANGE, fond: '#33271A', annonce: 'Picon chaud. Pense à boire un grand verre d eau.' },
+  { max: 2.2, cle: 'patois', titre: 'Parle couramment le patois', emoji: '🥴', sousTitre: 'Risque élevé d’envoyer un SMS à ton ex. Pose le téléphone.', accent: ROUGE, fond: '#341F1B', annonce: 'Attention, tu parles patois. Ne prends surtout pas la route.' },
+  { max: 3.0, cle: 'refait', titre: 'Refait le monde à lui tout seul', emoji: '🗣️', sousTitre: 'Tu tutoies le patron et tu règles la géopolitique. De l’eau. Maintenant.', accent: ROUGE, fond: '#3A1D18', annonce: 'Voilà, tu refais le monde. Allez, un verre d eau et au lit.' },
+  { max: 4.0, cle: 'crabe', titre: 'Démarche en crabe', emoji: '🦀', sousTitre: 'Le sol tangue, les murs aussi. Assieds-toi, capitaine.', accent: ROUGE_VIF, fond: '#3F1C16', annonce: 'Oulààà, ça tangue. Tiens-toi au comptoir, mon grand.' },
+  { max: Infinity, cle: 'legende', titre: 'Légende du comptoir', emoji: '☠️', sousTitre: 'Niveau coma joyeux. Même le tavernier ne comprend plus rien.', accent: ROUGE_VIF, fond: '#431A14', annonce: 'Mhhh shanté, t es mon meilleur pote toi, hips.' },
+];
+
+/** État courant selon le BAC : 7 paliers, du gardon frais au coma joyeux. */
+export function etatBac(bac: number): EtatBac {
+  const p = PALIERS.find((x) => bac < x.max) ?? PALIERS[PALIERS.length - 1];
+  return {
+    cle: p.cle,
+    titre: p.titre,
+    sousTitre: p.sousTitre,
+    emoji: p.emoji,
+    accent: p.accent,
+    fond: p.fond,
+    texteSur: CREME,
+    annonce: p.annonce,
+    alerte: bac >= LIMITE_LEGALE,
+    danger: bac >= 1.5,
+  };
+}
+
+/** Voix du tavernier de plus en plus pâteuse : pitch ↓ et débit ↓ avec le BAC. */
+export function paramsIvresse(bac: number): { pitch: number; rate: number } {
+  const pitch = Math.max(0.2, 0.6 - Math.max(0, bac - 1) * 0.08);
+  const rate = Math.max(0.5, 0.95 - Math.max(0, bac - 1.5) * 0.1);
+  return { pitch, rate };
+}
+
+const INTERJ = ['hips', 'euuuh', 'hein', 'pfff', 'han'];
+const GLOUBI = ['Mhhh… hips…', 'shhanté…', 't’es… t’es mon meilleur pôteuh…', 'euuuuh…', 'attends… j’ai oublié…', 'lalala…', '*hips*', 'han… quoi ?', 'le… le truc, là…'];
 
 /**
- * État courant selon le BAC. Trois paliers, fidèles au brief :
- * « Frais comme un gardon » → « Picon-Chaud » → « Parle couramment le patois ».
+ * « Bredouille » une phrase selon le BAC : intacte sous 2 g/L, de plus en plus
+ * pâteuse ensuite (voyelles étirées + interjections), et carrément
+ * incompréhensible à partir de 5 g/L (charabia total).
  */
-export function etatBac(bac: number): EtatBac {
-  if (bac < LIMITE_LEGALE) {
-    return {
-      cle: 'sobre',
-      titre: 'Frais comme un gardon',
-      sousTitre: 'Tu tiens le comptoir droit. Bravo champion.',
-      emoji: '😎',
-      accent: VERT,
-      fond: '#20281C',
-      texteSur: '#F3E8CF',
-      annonce: 'Frais comme un gardon. Tout va bien au comptoir.',
-    };
+export function bredouiller(texte: string, bac: number): string {
+  if (bac < 2) return texte;
+  if (bac >= 5) {
+    const n = 6 + Math.floor(Math.random() * 4);
+    let out = '';
+    for (let i = 0; i < n; i++) out += GLOUBI[Math.floor(Math.random() * GLOUBI.length)] + ' ';
+    return out.trim();
   }
-  if (bac < 1.2) {
-    return {
-      cle: 'chaud',
-      titre: 'Picon-Chaud',
-      sousTitre: 'Les joues rosissent, le béret penche. On lève le pied.',
-      emoji: '🥵',
-      accent: ORANGE,
-      fond: '#33271A',
-      texteSur: '#F3E8CF',
-      annonce: 'Picon chaud. Pense à boire un verre d eau.',
-    };
+  const f = Math.min(1, (bac - 2) / 2.5);
+  const res: string[] = [];
+  for (const mot of texte.split(' ')) {
+    const m = mot.replace(/[aeiouy]/gi, (v) => (Math.random() < f * 0.5 ? v + v + v : v));
+    res.push(m);
+    if (Math.random() < f * 0.3) res.push('… ' + INTERJ[Math.floor(Math.random() * INTERJ.length)] + ' …');
   }
-  return {
-    cle: 'danger',
-    titre: 'Parle couramment le patois',
-    sousTitre: 'Risque élevé d’envoyer un SMS à ton ex. Pose le téléphone.',
-    emoji: '🥴',
-    accent: ROUGE,
-    fond: '#341F1B',
-    texteSur: '#F3E8CF',
-    annonce: 'Attention. Tu parles couramment le patois. Ne prends surtout pas la route.',
-  };
+  return res.join(' ');
 }

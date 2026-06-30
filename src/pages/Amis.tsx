@@ -55,6 +55,17 @@ export default function Amis() {
   const accepter = async (l: LienAmi) => { if (await accepterDemande(l.amitieId)) { message(`${l.pseudo} est dans ta bande !`); recharger(); } };
   const retirer = async (l: LienAmi) => { if (await retirerAmitie(l.amitieId)) recharger(); };
 
+  // Partage du lien de l'appli : feuille de partage native, sinon copie du lien.
+  const inviter = async () => {
+    const url = `${window.location.origin}${import.meta.env.BASE_URL}`;
+    const partage = { title: "La Boît'à Soif", text: "Rejoins-moi sur La Boît'à Soif 🍻 — l'appli des piliers de bar ! Crée ton compte et on se retrouve au classement.", url };
+    if (typeof navigator.share === 'function') {
+      try { await navigator.share(partage); return; } catch { return; }
+    }
+    try { await navigator.clipboard.writeText(url); message('Lien copié ! Envoie-le à tes potes 🍻'); }
+    catch { message(url); }
+  };
+
   const btn: React.CSSProperties = { minHeight: 44, padding: '0 14px', borderRadius: 10, fontWeight: 800, fontSize: '0.85rem', border: 'none' };
 
   return (
@@ -68,6 +79,14 @@ export default function Amis() {
       {flash && (
         <div role="status" style={{ margin: '14px 16px 0', background: COL.panneau, border: `1px solid ${COL.or}`, borderRadius: 12, padding: '12px 14px', color: COL.creme, fontWeight: 600, fontSize: '0.9rem' }}>{flash}</div>
       )}
+
+      {/* Inviter des potes (partage du lien de l'appli) */}
+      <section style={{ margin: '16px 16px 0' }}>
+        <button onClick={inviter} className="pmu-arcade" style={{ width: '100%', minHeight: 56, fontSize: '1rem' }}>📤 Inviter des potes</button>
+        <p style={{ margin: '8px 2px 0', fontSize: '0.8rem', color: COL.texte2, lineHeight: 1.45 }}>
+          Partage le lien de l&apos;appli. Une fois qu&apos;ils ont créé leur compte, ajoute-les par leur pseudo ci-dessous.
+        </p>
+      </section>
 
       {/* Recherche */}
       <section style={{ margin: '18px 16px 0' }}>

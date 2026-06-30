@@ -1,0 +1,103 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   DA « LA BOÎT'À SOIF » — couche enseigne de bar vintage / PMU.
+   Fond ardoise, jaune bière (or), ambre, rouge néon, crème, nappe vichy.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Titre-enseigne : capitales, gras, or, avec un mot accent en rouge néon */
+.pmu-titre {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.04;
+  color: var(--or);
+  margin: 0;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+.pmu-titre .accent {
+  color: var(--rouge-neon);
+}
+.pmu-titre--creme {
+  color: var(--creme);
+}
+
+/* Nappe vichy (gingham) rouge & crème — le fond emblématique du PMU */
+.gingham {
+  background-color: var(--gingham-rouge);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(243, 232, 207, 0.55) 0 14px, transparent 14px 28px),
+    repeating-linear-gradient(0deg, rgba(243, 232, 207, 0.55) 0 14px, transparent 14px 28px);
+  background-blend-mode: screen;
+}
+/* Nappe vichy assombrie (cadre extérieur de l'appli) */
+.gingham-sombre {
+  background-color: #2a1512;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(177, 58, 46, 0.55) 0 16px, transparent 16px 32px),
+    repeating-linear-gradient(0deg, rgba(177, 58, 46, 0.55) 0 16px, transparent 16px 32px);
+}
+
+/* Panneau ardoise (tableau noir) — pour scoreboards et encarts */
+.pmu-ardoise {
+  position: relative;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.05), transparent 42%),
+    radial-gradient(circle at 82% 88%, rgba(255, 255, 255, 0.04), transparent 46%),
+    #14110f;
+  color: var(--creme);
+  border-radius: 18px;
+  border: 2px dashed rgba(243, 232, 207, 0.4);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  padding: 18px;
+}
+.pmu-ardoise .craie { color: var(--creme); }
+.pmu-ardoise .craie-2 { color: rgba(243, 232, 207, 0.66); }
+.pmu-ardoise .craie-accent { color: var(--or); }
+
+/* Carte sombre standard (remplace les cartes blanches) */
+.pmu-carte {
+  background: var(--panneau);
+  border: 1px solid var(--bleu-100);
+  border-radius: 18px;
+  color: var(--creme);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* Bouton arcade : tactile, gros, rebord 3D qui s'enfonce au clic */
+.pmu-arcade {
+  border: none;
+  border-radius: 14px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  color: #fff;
+  background: var(--rouge-neon);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.12s ease;
+  min-height: 64px;
+}
+.pmu-arcade--or { background: var(--or); color: #2a1f10; }
+.pmu-arcade--ambre { background: var(--ambre); color: #2a1f10; }
+.pmu-arcade--ardoise { background: #2c2722; color: var(--creme); box-shadow: 0 6px 0 rgba(0, 0, 0, 0.55); }
+.pmu-arcade:hover { filter: brightness(1.06); }
+.pmu-arcade:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+.pmu-arcade:focus-visible {
+  outline: 3px solid var(--or);
+  outline-offset: 3px;
+}
+
+/* Cadre circulaire façon badge (autour du logo) */
+.pmu-badge {
+  border-radius: 50%;
+  border: 3px solid var(--rouge-neon);
+  box-shadow: 0 0 0 3px var(--ardoise), 0 0 0 5px rgba(243, 232, 207, 0.4);
+  background: var(--ardoise);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pmu-arcade {
+    transition: none;
+  }
+}

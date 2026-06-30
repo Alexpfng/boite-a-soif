@@ -1,0 +1,25 @@
+/* Styles d'impression : utilisés pour les exports PDF via impression du navigateur */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .zone-impression,
+  .zone-impression * {
+    visibility: visible;
+  }
+  .zone-impression {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 10mm;
+    background: white;
+    color: #111;
+  }
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  .zone-impression.paysage ~ * {
+    display: none;
+  }
+}

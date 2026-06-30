@@ -1,0 +1,44 @@
+/* Tokens de design LA BOÎT'À SOIF — enseigne de bar vintage : ardoise sombre,
+   jaune bière, ambre, rouge néon, crème, nappe vichy. Mêmes noms de variables
+   que l'ancienne charte, valeurs remappées vers les rôles vintage. */
+:root {
+  --bleu-900: #1b1917; /* Ardoise — fond appli */
+  --bleu-700: #241f1b; /* Panneau / carte sombre */
+  --bleu-500: #e9c46a; /* Or (jaune bière) — accent */
+  --bleu-100: #3a332c; /* Liseré sur fond sombre */
+  --orange-600: #e14b3a; /* Rouge néon — action */
+  --orange-400: #ec9a4b; /* Ambre */
+  --orange-100: #2e251c; /* Panneau ambré sombre */
+  --sable-50: #241f1b; /* Surface sombre (ex-crème) */
+  --blanc: #ffffff;
+  --vert-ok: #9ec06b;
+  --rouge-non: #e1503a;
+  --texte: #f3e8cf; /* Crème — texte principal */
+  --texte-2: #bcaf93; /* Crème atténuée */
+  --surface: #241f1b;
+
+  /* Couleurs vintage explicites */
+  --or: #e9c46a;
+  --ambre: #ec9a4b;
+  --rouge-neon: #e14b3a;
+  --creme: #f3e8cf;
+  --ardoise: #1b1917;
+  --panneau: #241f1b;
+  --gingham-rouge: #b5392e;
+
+  /* Échelle de texte pilotée par le panneau d'accessibilité (100/115/130/150 %) */
+  --font-scale: 1;
+  /* Taille minimale des cibles tactiles (passe à 64px en mode confort) */
+  --target-min: 48px;
+  --espace-confort: 1;
+}
+
+html {
+  /* Corps de base 18px pour un public senior, multiplié par la préférence utilisateur */
+  font-size: calc(18px * var(--font-scale));
+}
+
+[data-comfort='true'] {
+  --target-min: 64px;
+  --espace-confort: 1.35;
+}

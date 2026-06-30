@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Boîte à Soif — Pour rigoler au comptoir</title>
+    <meta name="description" content="La Boîte à Soif, c'est l'appli qui met l'ambiance au bar : jeux, blagues, chansons à reprendre et toasts pour trinquer. En gros caractères et lue à voix haute, pour rigoler ensemble à tout âge. Gratuite, sans inscription, hors ligne.">
+    
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#1B1917" />
+    <script>
+      // Application des préférences d'accessibilité AVANT le premier rendu (pas de flash)
+      (function () {
+        try {
+          var prefs = JSON.parse(localStorage.getItem('aphasaide:a11y') || '{}');
+          var html = document.documentElement;
+          if (prefs.fontScale) html.style.setProperty('--font-scale', prefs.fontScale / 100);
+          if (prefs.contrast) html.setAttribute('data-theme', 'contrast');
+          if (prefs.comfort) html.setAttribute('data-comfort', 'true');
+        } catch (e) {}
+      })();
+    </script>
+    <meta property="og:title" content="Boîte à Soif — Pour rigoler au comptoir">
+  <meta name="twitter:title" content="Boîte à Soif — Pour rigoler au comptoir">
+  <meta property="og:description" content="Jeux, blagues, chansons à reprendre et toasts pour trinquer : la Boîte à Soif met l'ambiance au bar. En gros et à voix haute, pour rigoler ensemble à tout âge.">
+  <meta name="twitter:description" content="Jeux, blagues, chansons à reprendre et toasts pour trinquer : la Boîte à Soif met l'ambiance au bar. En gros et à voix haute, pour rigoler ensemble à tout âge.">
+  <meta name="twitter:card" content="summary">
+</head>
+  <body>
+    <!-- Écran de chargement BOÎTE À SOIF — verres qui trinquent, retiré au montage de React -->
+    <style>
+      #splash {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 26px; background: #1B1917;
+        transition: opacity .45s ease; opacity: 1;
+      }
+      #splash.partir { opacity: 0; pointer-events: none; }
+      #splash .marque {
+        font-family: 'Mulish', system-ui, sans-serif; font-weight: 800;
+        font-size: 1.7rem; letter-spacing: -.01em; color: #F3E8CF;
+      }
+      #splash .marque .apo { color: #E14B3A; }
+      #splash svg { width: 116px; height: 116px; }
+      #splash .logo { width: 190px; height: 190px; border-radius: 22px; box-shadow: 0 12px 34px rgba(0,0,0,.55); animation: splashPulse 2s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) { #splash .logo { animation: none; } }
+      #splash .ln {
+        stroke-dasharray: 1; stroke-dashoffset: 1;
+        animation: splashTrace .9s ease forwards;
+      }
+      #splash .nd { opacity: 0; transform-origin: center; animation: splashPop .4s ease forwards; }
+      #splash .ctr { transform-origin: center; animation: splashPulse 1.8s ease-in-out infinite; }
+      #splash .points { display: flex; gap: 9px; }
+      #splash .points i {
+        width: 8px; height: 8px; border-radius: 50%; background: #CFE0E7; display: block;
+        animation: splashDot 1.2s ease-in-out infinite;
+      }
+      #splash .points i:nth-child(2) { animation-delay: .18s; }
+      #splash .points i:nth-child(3) { animation-delay: .36s; }
+      @keyframes splashTrace { to { stroke-dashoffset: 0; } }
+      @keyframes splashPop { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+      @keyframes splashPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+      @keyframes splashDot { 0%,100% { opacity: .3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
+      @media (prefers-reduced-motion: reduce) {
+        #splash .ln, #splash .nd, #splash .ctr, #splash .points i { animation: none !important; }
+        #splash .ln { stroke-dashoffset: 0; } #splash .nd { opacity: 1; }
+      }
+    </style>
+    <div id="splash" role="status" aria-label="Chargement de l’application">
+      <img class="logo" src="/brand/logo.png" alt="La Boît'à Soif" />
+      <div class="points" aria-hidden="true"><i></i><i></i><i></i></div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

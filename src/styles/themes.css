@@ -1,0 +1,67 @@
+/* Thème contraste élevé — approche du design : les éléments colorés portent
+   data-tone et sont neutralisés (fond blanc, texte noir, bordure franche). */
+[data-theme='contrast'] body,
+[data-theme='contrast'] .app-shell {
+  background: #fff !important;
+}
+
+[data-theme='contrast'] [data-tone] {
+  background: #fff !important;
+  color: #111 !important;
+  border: 2px solid #111 !important;
+  box-shadow: none !important;
+}
+
+[data-theme='contrast'] [data-tone] * {
+  color: #111 !important;
+}
+
+[data-theme='contrast'] [data-tone] svg {
+  stroke: #111;
+}
+
+[data-theme='contrast'] a {
+  color: #111 !important;
+  text-decoration: underline !important;
+}
+
+[data-theme='contrast'] .blob-decor,
+[data-theme='contrast'] [data-blob] {
+  display: none !important;
+}
+
+/* Mode confort : zones tactiles agrandies */
+[data-comfort='true'] button {
+  min-height: 64px !important;
+}
+
+[data-comfort='true'] [data-card] {
+  padding: 26px !important;
+}
+
+/* Focus visible épais sur tous les éléments interactifs */
+:focus-visible {
+  outline: 3px solid #15576f;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+[data-theme='contrast'] :focus-visible {
+  outline-color: #111111;
+}
+
+/* Hover doux des boutons discrets de la TopBar */
+.hover-bleu:hover {
+  background: rgba(21, 87, 111, 0.08) !important;
+}
+
+/* Respect de prefers-reduced-motion : aucune animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

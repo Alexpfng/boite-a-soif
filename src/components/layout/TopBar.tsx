@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Wordmark, IconeRecherche, IconeAccessibilite, IconeRetour } from '../../ui/icons';
+import { Wordmark, IconeAccessibilite, IconeRetour } from '../../ui/icons';
 import { COL } from '../../ui/theme';
 
 interface Props {
@@ -50,18 +50,6 @@ export function TopBar({ onOpenPanel }: Props) {
           <Wordmark taille="topbar" />
         </button>
         <div style={{ flex: 1 }} />
-        <button
-          onClick={() => navigate('/recherche')}
-          aria-label="Rechercher"
-          className="hover-bleu"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 48, height: 48, border: 'none', background: 'transparent',
-            borderRadius: 14, color: COL.or,
-          }}
-        >
-          <IconeRecherche />
-        </button>
         <button
           onClick={onOpenPanel}
           aria-label="Ouvrir les options d'accessibilité"

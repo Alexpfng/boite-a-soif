@@ -20,8 +20,8 @@ const CLES_GLOBALES = new Set(['a11y', 'install-fermee']);
 
 // Clés de données personnelles (synchronisées et importées au premier login).
 export const CLES_PERSONNELLES = [
-  'favoris', 'rendezvous', 'bienetre', 'carte', 'arbre', 'phrases', 'carnet',
-  'fiche-medicale', 'demarches', 'journal-aidant', 'parle-recentes',
+  'pese-alco-profil', 'pese-alco-consos', 'pese-alco-historique',
+  'cabine-derniere', 'cabine-pisse', 'cabine-legendes',
 ];
 
 let utilisateurCourant: string | null = null;

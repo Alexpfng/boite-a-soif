@@ -4,6 +4,7 @@ import { InstallBanner } from '../components/ui/InstallBanner';
 import { Wordmark, ChevronDroit } from '../ui/icons';
 import { COL, FRAUNCES } from '../ui/theme';
 import { usePeseAlco } from '../features/pesealco/usePeseAlco';
+import { useAuth } from '../features/auth/AuthContext';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
@@ -60,6 +61,8 @@ function Comptoir({ bg, fg, border, onClick, icon, label }: {
 export default function Accueil() {
   const navigate = useNavigate();
   const { bac, etat, consos } = usePeseAlco();
+  const { user, seDeconnecter } = useAuth();
+  const pseudo = ((user?.user_metadata?.pseudo as string) || '').trim() || 'Pilier';
 
   return (
     <AppShell>
@@ -82,6 +85,35 @@ export default function Accueil() {
       </div>
 
       <InstallBanner />
+
+      {/* Mon compte — optionnel */}
+      <section aria-label="Mon compte" style={{ margin: '16px 16px 0' }}>
+        {user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 14, padding: '12px 14px' }}>
+            <span style={{ width: 40, height: 40, borderRadius: '50%', background: COL.or, color: '#2A1F10', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', flexShrink: 0 }} aria-hidden="true">
+              {pseudo.charAt(0).toUpperCase()}
+            </span>
+            <span style={{ flex: 1, minWidth: 0, lineHeight: 1.25 }}>
+              <span style={{ display: 'block', fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COL.texte2 }}>Connecté</span>
+              <span style={{ display: 'block', fontWeight: 800, color: COL.creme, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pseudo}</span>
+            </span>
+            <button onClick={seDeconnecter}
+              style={{ flexShrink: 0, minHeight: 40, padding: '0 14px', borderRadius: 10, border: `2px solid ${COL.bleu1}`, background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem' }}>
+              Déconnexion
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => navigate('/connexion')}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: COL.panneau, border: `2px dashed ${COL.or}`, borderRadius: 14, padding: '14px 16px', color: COL.creme, textAlign: 'left' }}>
+            <span style={{ fontSize: '1.6rem' }} aria-hidden="true">👤</span>
+            <span style={{ flex: 1 }}>
+              <span style={{ display: 'block', fontFamily: FRAUNCES, fontWeight: 700, color: COL.or }}>Crée ton compte de pilier</span>
+              <span style={{ display: 'block', fontSize: '0.82rem', color: COL.texte2, marginTop: 2 }}>Optionnel — pour te retrouver et garder tes données d&apos;un appareil à l&apos;autre.</span>
+            </span>
+            <ChevronDroit color={COL.or} />
+          </button>
+        )}
+      </section>
 
       {/* Vedette : Le Pèse-Alco, taux en direct */}
       <section aria-label="Le Pèse-Alco" style={{ margin: '18px 16px 0' }}>

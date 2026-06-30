@@ -146,28 +146,14 @@ function vraimentParler(texte: string, pitch: number, rate: number): void {
 
 /**
  * Fait parler le « tavernier » : français, voix grave, débit posé.
- * Si les voix ne sont pas encore prêtes (cas fréquent au 1er clic sur Chrome),
- * on attend `voiceschanged` (avec un filet de sécurité). Retourne false si la
- * synthèse vocale est totalement indisponible.
+ * IMPORTANT iOS : `speak()` DOIT être appelé directement dans le geste de
+ * l'utilisateur. On ne diffère donc jamais l'appel (pas de setTimeout ni
+ * d'attente de `voiceschanged`), sinon aucune voix ne sort sur iPhone.
+ * Retourne false si la synthèse vocale est indisponible.
  */
 export function parlerTavernier(texte: string, pitch = 0.55, rate = 0.92): boolean {
   if (!aTTS) return false;
-  const S = window.speechSynthesis;
-
-  if (S.getVoices().length === 0) {
-    let fait = false;
-    const lancer = () => {
-      if (fait) return;
-      fait = true;
-      try { S.removeEventListener('voiceschanged', lancer); } catch { /* ignore */ }
-      chargerVoix();
-      vraimentParler(texte, pitch, rate);
-    };
-    try { S.addEventListener('voiceschanged', lancer); } catch { /* ignore */ }
-    window.setTimeout(lancer, 350); // filet : certains navigateurs n'émettent jamais l'évènement
-    return true;
-  }
-
+  if (!voixFr) chargerVoix(); // au moment d'un tap, les voix sont quasi toujours prêtes
   vraimentParler(texte, pitch, rate);
   return true;
 }
@@ -218,18 +204,9 @@ if (typeof document !== 'undefined') {
         /* ignore */
       }
     }
-    if (aTTS) {
-      chargerVoix();
-      try {
-        // Utterance silencieuse pour débloquer la synthèse (Safari/iOS).
-        const u = new SpeechSynthesisUtterance(' ');
-        u.volume = 0;
-        window.speechSynthesis.speak(u);
-        window.speechSynthesis.cancel();
-      } catch {
-        /* ignore */
-      }
-    }
+    // On précharge seulement les voix (sans parler) : sur iOS, la vraie parole
+    // est déclenchée par le tap sur un bouton, directement dans son geste.
+    if (aTTS) chargerVoix();
   };
   ['pointerdown', 'touchstart', 'keydown'].forEach((ev) =>
     document.addEventListener(ev, deverrouiller, { once: true, passive: true })

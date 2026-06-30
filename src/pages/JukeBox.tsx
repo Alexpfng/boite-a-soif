@@ -178,6 +178,7 @@ export default function JukeBox() {
             <span style={{ flex: 1, color: COL.creme, fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.3 }}>
               <span style={{ display: 'block', fontSize: '0.64rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: COL.or }}>Réplique du mois · {topMois.likes} 👍</span>
               « {topMois.texte} »
+              {topMois.auteur && <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: COL.texte2, marginTop: 2 }}>par {topMois.auteur}</span>}
             </span>
             <button onClick={() => declamerTexte(topMois.texte)} aria-label="Déclamer la réplique du mois" style={{ width: 40, height: 40, borderRadius: 10, border: 'none', background: COL.or, color: '#2A1F10', fontWeight: 800 }}>🔊</button>
           </div>
@@ -194,8 +195,9 @@ export default function JukeBox() {
                 <button onClick={() => declamerTexte(p.texte)} aria-label={`Déclamer : ${p.texte}`}
                   style={{ flex: 1, textAlign: 'left', background: 'transparent', border: 'none', color: COL.creme, fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.3 }}>
                   🔊 {p.texte}
+                  {p.auteur && <span style={{ display: 'block', fontWeight: 600, fontSize: '0.72rem', color: COL.texte2, marginTop: 2 }}>par {p.auteur}</span>}
                 </button>
-                <button onClick={() => likerRep(p.id)} disabled={p.dejaLike} aria-label="J’aime cette réplique"
+                <button onClick={() => likerRep(p.id)} aria-pressed={p.dejaLike} aria-label={p.dejaLike ? 'Retirer mon like' : 'J’aime cette réplique'}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, minHeight: 40, padding: '0 12px', borderRadius: 10, border: `2px solid ${p.dejaLike ? COL.or : COL.bleu1}`, background: p.dejaLike ? 'rgba(233,196,106,0.15)' : 'transparent', color: p.dejaLike ? COL.or : COL.texte2, fontWeight: 800 }}>
                   👍 {p.likes}
                 </button>

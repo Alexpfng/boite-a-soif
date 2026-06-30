@@ -168,7 +168,7 @@ const LANDING_HTML = `
         <a class="btn btn-primaire" href="${import.meta.env.BASE_URL}app">Ouvrir la boîte</a>
         <a class="btn btn-clair" href="#decouvrir">Voir ce qu&rsquo;il y a dedans</a>
       </div>
-      <p class="note">Sans pub · Sans inscription · Sur téléphone, tablette et ordinateur · Même sans réseau</p>
+      <p class="note">Sans pub · Compte gratuit en 30 s · Sur téléphone, tablette et ordinateur</p>
     </div>
 
     <div class="apercu" aria-hidden="true">
@@ -371,10 +371,10 @@ const LANDING_HTML = `
         <h2>Vos records, toujours à portée</h2>
         <p>
           Marquez vos répliques préférées d&rsquo;une étoile et gardez vos records de
-          soirée : tout reste sur l&rsquo;appareil. Pas de compte à créer, pas de
+          soirée. Compte gratuit pour rejoindre tes potes, pas de
           publicité, pas de traceur — on est là pour rigoler, pas pour vous pister.
         </p>
-        <div class="tags"><span class="tag">Sans inscription</span><span class="tag">Vos favoris gardés</span><span class="tag">Sans publicité</span><span class="tag">Hors ligne</span></div>
+        <div class="tags"><span class="tag">Compte gratuit</span><span class="tag">Entre potes</span><span class="tag">Sans publicité</span><span class="tag">Classement en direct</span></div>
       </div>
     </div>
   </div>

@@ -146,7 +146,7 @@ const LANDING_HTML = `
       <span class="wordmark">La Boît&rsquo;à <span class="apo">Soif</span></span>
     </a>
     <div class="grandit"></div>
-    <a class="btn btn-primaire lien-app" href="/app">Ouvrir la boîte</a>
+    <a class="btn btn-primaire lien-app" href="${import.meta.env.BASE_URL}app">Ouvrir la boîte</a>
   </div>
 </header>
 
@@ -165,7 +165,7 @@ const LANDING_HTML = `
         et le classement des potes. Le tout en gros — et avec le sourire.
       </p>
       <div class="actions">
-        <a class="btn btn-primaire" href="/app">Ouvrir la boîte</a>
+        <a class="btn btn-primaire" href="${import.meta.env.BASE_URL}app">Ouvrir la boîte</a>
         <a class="btn btn-clair" href="#decouvrir">Voir ce qu&rsquo;il y a dedans</a>
       </div>
       <p class="note">Sans pub · Sans inscription · Sur téléphone, tablette et ordinateur · Même sans réseau</p>
@@ -387,7 +387,7 @@ const LANDING_HTML = `
       <h2>Allez, la tournée est pour nous.<br />C&rsquo;est gratuit, pour toujours.</h2>
       <p>Ouvrez la boîte depuis votre téléphone, votre tablette ou votre ordinateur — et gardez de quoi mettre l&rsquo;ambiance, où que vous soyez.</p>
       <div class="actions">
-        <a class="btn btn-blanc" href="/app">Ouvrir la boîte</a>
+        <a class="btn btn-blanc" href="${import.meta.env.BASE_URL}app">Ouvrir la boîte</a>
       </div>
     </div>
   </div>
@@ -403,7 +403,7 @@ const LANDING_HTML = `
       </div>
       <nav aria-label="Liens de pied de page" style="display:flex; flex-direction:column; gap:10px; font-size:.94rem;">
         <a href="#decouvrir">Ce qu&rsquo;il y a dans la boîte</a>
-        <a href="/app">Ouvrir la boîte</a>
+        <a href="${import.meta.env.BASE_URL}app">Ouvrir la boîte</a>
       </nav>
     </div>
     <p class="avert">

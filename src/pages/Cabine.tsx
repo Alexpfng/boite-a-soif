@@ -20,12 +20,13 @@ import { Citations } from './cabine/Citations';
 import { NiveauABulle } from './cabine/NiveauABulle';
 import { Reflexes } from './cabine/Reflexes';
 import { Quiz } from './cabine/Quiz';
+import { BoussoleBars } from './cabine/BoussoleBars';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
 type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes'
   | 'toasts' | 'motdujour' | 'surnom' | 'traducteur' | 'mytho' | 'beauferie' | 'quipaie' | 'selfie' | 'citations'
-  | 'niveau' | 'reflexes' | 'quiz';
+  | 'niveau' | 'reflexes' | 'quiz' | 'boussole';
 
 export default function Cabine() {
   const navigate = useNavigate();
@@ -65,6 +66,7 @@ export default function Cabine() {
             <Tuile emoji="🫧" titre="Le Niveau à Bulle" desc="Es-tu encore bien droit ? Le téléphone juge." bg={COL.ambre} fg="#2A1F10" onClick={() => setVue('niveau')} />
             <Tuile emoji="⚡" titre="Le Test de Réflexes" desc="Tape au vert. Le score chute avec les verres." bg={COL.or} fg="#2A1F10" onClick={() => setVue('reflexes')} />
             <Tuile emoji="🧠" titre="Quiz Culture G de Bar" desc="10 questions de comptoir. T’es calé ou pas ?" bg="#14110F" fg={COL.creme} onClick={() => setVue('quiz')} />
+            <Tuile emoji="🧭" titre="La Boussole à Bars" desc="Les bars autour + où le soleil tape pour la terrasse." bg={COL.rougeNeon} fg="#fff" onClick={() => setVue('boussole')} />
           </nav>
           <section style={{ margin: '24px 16px 0' }}>
             <div style={{ background: COL.orangeClair, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '14px 16px' }}>
@@ -102,6 +104,7 @@ export default function Cabine() {
       {vue === 'niveau' && <NiveauABulle onRetour={() => setVue('menu')} />}
       {vue === 'reflexes' && <Reflexes onRetour={() => setVue('menu')} />}
       {vue === 'quiz' && <Quiz onRetour={() => setVue('menu')} />}
+      {vue === 'boussole' && <BoussoleBars onRetour={() => setVue('menu')} />}
     </AppShell>
   );
 }

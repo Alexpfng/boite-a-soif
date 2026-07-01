@@ -6,7 +6,15 @@ import { supabase } from '../../integrations/supabase/client';
 export type Mode = 'reflexes' | 'repliques' | 'quiz';
 export type Statut = 'attente' | 'en_cours' | 'termine';
 
-export interface Concours { id: string; code: string; hote: string; mode: Mode; statut: Statut; manche: number }
+export interface Concours { id: string; code: string; hote: string; mode: Mode; statut: Statut; manche: number; jeux: string[] }
+
+// Les épreuves possibles du tournoi ; chaque tournoi en tire quelques-unes au hasard.
+export const JEUX_POOL = ['reflexes', 'tapmax', 'chronostop', 'cri', 'shaker', 'equilibre', 'blind'];
+function choisirJeux(n = 4): string[] {
+  const a = [...JEUX_POOL];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a.slice(0, n);
+}
 export interface Participant { user_id: string; pseudo: string }
 export interface Score { user_id: string; pseudo: string; score: number; manche: number }
 
@@ -28,7 +36,7 @@ export async function creerConcours(mode: Mode): Promise<Concours | null> {
   if (!u) return null;
   for (let essai = 0; essai < 5; essai++) {
     const code = codeAleatoire();
-    const { data, error } = await f('concours').insert({ code, hote: u.id, mode, statut: 'attente' }).select().single();
+    const { data, error } = await f('concours').insert({ code, hote: u.id, mode, statut: 'attente', jeux: choisirJeux(4) }).select().single();
     if (!error && data) {
       await f('concours_participants').insert({ concours_id: data.id, user_id: u.id, pseudo: pseudoDe(u) });
       return data as Concours;
@@ -47,7 +55,7 @@ export async function rejoindreParCode(code: string): Promise<string | null> {
 }
 
 export async function lireConcours(id: string): Promise<Concours | null> {
-  const { data } = await f('concours').select('id, code, hote, mode, statut, manche').eq('id', id).maybeSingle();
+  const { data } = await f('concours').select('id, code, hote, mode, statut, manche, jeux').eq('id', id).maybeSingle();
   return (data as Concours) || null;
 }
 export async function lancerConcours(id: string) { await f('concours').update({ statut: 'en_cours', manche: 1 }).eq('id', id); }

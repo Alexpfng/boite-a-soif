@@ -11,6 +11,8 @@ const JukeBox          = lazy(() => import('./pages/JukeBox'));
 const Ardoise          = lazy(() => import('./pages/Ardoise'));
 const Champions        = lazy(() => import('./pages/Champions'));
 const Amis             = lazy(() => import('./pages/Amis'));
+const Concours         = lazy(() => import('./pages/Concours'));
+const ConcoursSalle    = lazy(() => import('./pages/ConcoursSalle'));
 const Analyse          = lazy(() => import('./pages/Analyse'));
 const Cabine           = lazy(() => import('./pages/Cabine'));
 const Bientot          = lazy(() => import('./pages/Bientot'));
@@ -46,6 +48,8 @@ const routes: RouteObject[] = [
   { path: '/ardoise',               element: <P><Ardoise /></P> },
   { path: '/champions',             element: <P><Champions /></P> },
   { path: '/amis',                  element: <P><Amis /></P> },
+  { path: '/concours',              element: <P><Concours /></P> },
+  { path: '/concours/:code',        element: <P><ConcoursSalle /></P> },
   { path: '/analyse',               element: <P><Analyse /></P> },
   { path: '/cabine',                element: <P><Cabine /></P> },
   { path: '/bientot',               element: <P><Bientot /></P> },

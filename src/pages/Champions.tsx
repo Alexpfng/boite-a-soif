@@ -137,6 +137,7 @@ export default function Champions() {
         <>
           <section style={{ margin: '18px 16px 0', display: 'flex', gap: 10 }}>
             <button onClick={() => navigate('/amis')} className="pmu-arcade" style={{ flex: 1, minHeight: 52 }}>👥 Mes potes</button>
+            <button onClick={() => navigate('/concours')} className="pmu-arcade pmu-arcade--ardoise" style={{ flex: 1, minHeight: 52 }}>🏆 Concours</button>
           </section>
 
           <section style={{ margin: '16px 16px 0' }}>

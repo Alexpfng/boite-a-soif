@@ -18,7 +18,7 @@ const SEXES: { cle: Sexe; label: string }[] = [
 export default function PeseAlco() {
   const {
     profil, setProfil,
-    consos, ajouter, annulerDerniere, viderSession, retirer,
+    consos, ajouter, annulerDerniere, viderSession, cloturerSession, retirer,
     bac, etat, msRetourZero, msSousLimite, sousLimite, totalGrammes,
   } = usePeseAlco();
 
@@ -170,9 +170,14 @@ export default function PeseAlco() {
           </button>
           <button onClick={viderSession} disabled={consos.length === 0}
             style={{ minHeight: 44, padding: '0 14px', borderRadius: 12, border: 'none', background: 'transparent', color: consos.length ? COL.rouge : COL.gris, fontWeight: 700, fontSize: '0.85rem' }}>
-            Vider l’ardoise
+            Vider (sans garder)
           </button>
         </div>
+
+        <button onClick={() => { cloturerSession(); montrerNudge('🍺 Soirée enregistrée dans ton historique et ton profil !'); }} disabled={consos.length === 0}
+          className="pmu-arcade" style={{ width: '100%', marginTop: 12, minHeight: 56, opacity: consos.length ? 1 : 0.5 }}>
+          🍺 Fin de soirée — enregistrer dans mon historique
+        </button>
 
         {/* Mini-ardoise de la session */}
         {consos.length > 0 && (

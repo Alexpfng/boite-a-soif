@@ -184,6 +184,29 @@ export default function CartePiliers() {
             )}
           </section>
 
+          {/* Comparatif des consos du groupe */}
+          {amis.length > 0 && (() => {
+            const groupe = [{ pseudo: 'Toi', consos: nbConsos, moi: true }, ...amis.map((a) => ({ pseudo: a.pseudo, consos: a.consos, moi: false }))].sort((x, y) => y.consos - x.consos);
+            const maxC = Math.max(1, ...groupe.map((g) => g.consos));
+            return (
+              <section style={{ margin: '18px 16px 0' }}>
+                <h2 style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.1rem', color: COL.or, margin: '0 2px 10px' }}>Comparatif des consos</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {groupe.map((g, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 76, fontSize: '0.82rem', fontWeight: 700, color: g.moi ? COL.or : COL.creme, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.pseudo}</span>
+                      <div style={{ flex: 1, height: 18, background: COL.panneau, borderRadius: 999, overflow: 'hidden', border: `1px solid ${COL.bleu1}` }}>
+                        <div style={{ width: `${(g.consos / maxC) * 100}%`, height: '100%', background: g.moi ? COL.or : COL.rougeNeon, minWidth: g.consos ? 6 : 0 }} />
+                      </div>
+                      <span style={{ width: 24, textAlign: 'right', fontWeight: 800, color: COL.texte2, fontSize: '0.82rem' }}>{g.consos}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ margin: '8px 2px 0', fontSize: '0.74rem', color: COL.texte2 }}>Le nombre de consos de chacun, en direct. En tête ? Bois un verre d’eau. 💧</p>
+              </section>
+            );
+          })()}
+
           {/* The Place to Bar : les coins qui bougent */}
           <section style={{ margin: '18px 16px 0' }}>
             <h2 style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.1rem', color: COL.or, margin: '0 2px 2px' }}>🔥 The Place to Bar</h2>

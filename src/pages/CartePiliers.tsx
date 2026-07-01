@@ -5,7 +5,7 @@ import { usePeseAlco } from '../features/pesealco/usePeseAlco';
 import { ecrireStockage } from '../lib/storage';
 import { envoyerDemande } from '../features/champions/amis';
 import {
-  publierPresence, lireAmisPresents, lirePublicsProches, lireZonesChaudes, abonnerPresence, lireReglages, cardinal,
+  publierPresence, lireAmisPresents, lirePublicsProches, lireZonesChaudes, abonnerPresence, lireReglages, cardinal, distance, cap,
   type AmiPresent, type PublicProche, type Zone, type Reglages, type Visibilite,
 } from '../features/proximite/api';
 
@@ -153,6 +153,24 @@ export default function CartePiliers() {
               <div style={{ background: COL.orangeClair, border: `2px solid ${COL.or}`, borderRadius: 16, padding: '12px 16px', color: COL.creme, lineHeight: 1.5 }}>
                 🍻 <strong>Ambiance du groupe</strong> ({consosGroupe.length} pilier{consosGroupe.length > 1 ? 's' : ''} ensemble) : moyenne <strong style={{ color: COL.or }}>{moyConsos.toFixed(1)} conso{moyConsos >= 2 ? 's' : ''}</strong> · <strong style={{ color: COL.or }}>{fmtBac(moyBac)} g/L</strong>
               </div>
+            </section>
+          )}
+
+          {/* Tes potes présents (liste claire, en plus des marqueurs) */}
+          {amis.length > 0 && (
+            <section style={{ margin: '16px 16px 0' }}>
+              <h2 style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.1rem', color: COL.or, margin: '0 2px 10px' }}>Tes potes présents ({amis.length})</h2>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {amis.map((a) => (
+                  <li key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: COL.panneau, border: `1px solid ${COL.rougeNeon}`, borderRadius: 12, padding: '10px 12px' }}>
+                    <span style={{ width: 36, height: 36, borderRadius: '50%', background: COL.rougeNeon, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flexShrink: 0 }} aria-hidden="true">{a.pseudo.charAt(0).toUpperCase()}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontWeight: 800, color: COL.creme, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.pseudo}</span>
+                      <span style={{ display: 'block', fontSize: '0.76rem', color: COL.texte2 }}>🍺 {a.consos} conso{a.consos > 1 ? 's' : ''} · {fmtBac(a.bac)} g/L{pos ? ` · ~${fmtDist(distance(pos.lat, pos.lon, a.lat, a.lon))} ${cardinal(cap(pos.lat, pos.lon, a.lat, a.lon))}` : ''}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 

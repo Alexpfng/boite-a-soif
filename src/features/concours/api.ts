@@ -6,9 +6,9 @@ import { supabase } from '../../integrations/supabase/client';
 export type Mode = 'reflexes' | 'repliques' | 'quiz';
 export type Statut = 'attente' | 'en_cours' | 'termine';
 
-export interface Concours { id: string; code: string; hote: string; mode: Mode; statut: Statut }
+export interface Concours { id: string; code: string; hote: string; mode: Mode; statut: Statut; manche: number }
 export interface Participant { user_id: string; pseudo: string }
-export interface Score { user_id: string; pseudo: string; score: number }
+export interface Score { user_id: string; pseudo: string; score: number; manche: number }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function f(t: string) { return (supabase as any).from(t); }
@@ -47,16 +47,17 @@ export async function rejoindreParCode(code: string): Promise<string | null> {
 }
 
 export async function lireConcours(id: string): Promise<Concours | null> {
-  const { data } = await f('concours').select('id, code, hote, mode, statut').eq('id', id).maybeSingle();
+  const { data } = await f('concours').select('id, code, hote, mode, statut, manche').eq('id', id).maybeSingle();
   return (data as Concours) || null;
 }
-export async function lancerConcours(id: string) { await f('concours').update({ statut: 'en_cours' }).eq('id', id); }
+export async function lancerConcours(id: string) { await f('concours').update({ statut: 'en_cours', manche: 1 }).eq('id', id); }
+export async function avancerManche(id: string, manche: number) { await f('concours').update({ manche }).eq('id', id); }
 export async function terminerConcours(id: string) { await f('concours').update({ statut: 'termine' }).eq('id', id); }
 
-export async function publierScore(id: string, score: number) {
+export async function publierScore(id: string, manche: number, score: number) {
   const u = await moi();
   if (!u) return;
-  await f('concours_scores').upsert({ concours_id: id, user_id: u.id, pseudo: pseudoDe(u), score }, { onConflict: 'concours_id,user_id' });
+  await f('concours_scores').upsert({ concours_id: id, user_id: u.id, pseudo: pseudoDe(u), manche, score }, { onConflict: 'concours_id,user_id,manche' });
 }
 
 export async function lireParticipants(id: string): Promise<Participant[]> {
@@ -64,8 +65,27 @@ export async function lireParticipants(id: string): Promise<Participant[]> {
   return (data as Participant[]) || [];
 }
 export async function lireScores(id: string): Promise<Score[]> {
-  const { data } = await f('concours_scores').select('user_id, pseudo, score').eq('concours_id', id);
+  const { data } = await f('concours_scores').select('user_id, pseudo, score, manche').eq('concours_id', id);
   return (data as Score[]) || [];
+}
+
+export interface Rang { user_id: string; pseudo: string; points: number }
+/** Classement cumulé : par manche on classe les scores et on attribue des points
+ *  (1er = N pts … dernier = 1). Le total départage le tournoi. */
+export function classementCumule(scores: Score[], ascParManche: Record<number, boolean>): Rang[] {
+  const points = new Map<string, number>();
+  const pseudo = new Map<string, string>();
+  scores.forEach((s) => pseudo.set(s.user_id, s.pseudo));
+  const manches = Array.from(new Set(scores.map((s) => s.manche)));
+  for (const m of manches) {
+    const asc = ascParManche[m] ?? true;
+    const list = scores.filter((s) => s.manche === m).sort((a, b) => (asc ? a.score - b.score : b.score - a.score));
+    const n = list.length;
+    list.forEach((s, i) => points.set(s.user_id, (points.get(s.user_id) || 0) + (n - i)));
+  }
+  return [...points.entries()]
+    .map(([user_id, pts]) => ({ user_id, pseudo: pseudo.get(user_id) || 'Pilier', points: pts }))
+    .sort((a, b) => b.points - a.points);
 }
 
 export function abonnerConcours(id: string, cb: () => void): () => void {

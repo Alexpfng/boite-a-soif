@@ -5,7 +5,7 @@ import { COL, FRAUNCES } from '../ui/theme';
 import { creerConcours, type Mode } from '../features/concours/api';
 
 const MODES: { cle: Mode; emoji: string; nom: string; desc: string; actif: boolean }[] = [
-  { cle: 'reflexes', emoji: '⚡', nom: 'Tournoi Réflexes', desc: 'Le plus rapide au vert gagne.', actif: true },
+  { cle: 'reflexes', emoji: '🏆', nom: 'Le Tournoi', desc: '3 mini-jeux qui s’enchaînent (Réflexes · Tape-max · Stop à 5 s), classement final aux points.', actif: true },
   { cle: 'repliques', emoji: '🎤', nom: 'Duel de répliques', desc: 'La vanne la plus votée l’emporte.', actif: false },
   { cle: 'quiz', emoji: '🧠', nom: 'Quiz live', desc: 'Tout le monde répond en même temps.', actif: false },
 ];

@@ -39,11 +39,12 @@ function depuis(maj?: string): string {
   return `il y a ${h} h`;
 }
 
-function LigneScore({ l, rang }: { l: Ligne; rang: number }) {
+function LigneScore({ l, rang, onClick }: { l: Ligne; rang: number; onClick?: () => void }) {
   const etat = etatBac(l.bac);
   const emoji = l.sam ? '😇' : etat.emoji;
   return (
-    <li style={{
+    <li onClick={onClick} style={{
+      cursor: onClick ? 'pointer' : 'default',
       display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12,
       background: l.estToi ? COL.orangeClair : l.sam ? 'rgba(233,196,106,0.12)' : 'rgba(243,232,207,0.05)',
       border: l.estToi ? `2px solid ${COL.or}` : l.sam ? '2px solid rgba(233,196,106,0.55)' : '1px solid rgba(243,232,207,0.12)',
@@ -145,7 +146,7 @@ export default function Champions() {
             <div className="pmu-ardoise">
               <h2 className="craie" style={{ margin: '0 0 14px', fontFamily: FRAUNCES, fontWeight: 800, fontSize: '1.05rem', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>🏆 Hall of Fame 🏆</h2>
               <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {lignesLive.map((l, i) => <LigneScore key={l.id} l={l} rang={i + 1} />)}
+                {lignesLive.map((l, i) => <LigneScore key={l.id} l={l} rang={i + 1} onClick={l.estToi ? undefined : () => navigate(`/profil/${l.id}`)} />)}
               </ol>
             </div>
           </section>

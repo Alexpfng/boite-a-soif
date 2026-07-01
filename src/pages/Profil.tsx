@@ -17,6 +17,36 @@ function Stat({ valeur, label }: { valeur: string; label: string }) {
   );
 }
 
+// Consos regroupées par semaine (12 dernières) + résumé de la semaine en cours.
+function bucketsSemaines(cuites: { cloturee_at: string; consos: number; duree_min: number }[]) {
+  const MS = 7 * 86400000, now = Date.now();
+  const semaines: number[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const fin = now - i * MS, debut = fin - MS;
+    semaines.push(cuites.filter((c) => { const t = Date.parse(c.cloturee_at); return t > debut && t <= fin; }).reduce((s, c) => s + c.consos, 0));
+  }
+  const dcuites = cuites.filter((c) => Date.parse(c.cloturee_at) > now - MS);
+  return { semaines, consosSemaine: dcuites.reduce((s, c) => s + c.consos, 0), tempsSemaine: dcuites.reduce((s, c) => s + c.duree_min, 0), cuitesSemaine: dcuites.length };
+}
+
+function Courbe({ valeurs }: { valeurs: number[] }) {
+  const max = Math.max(1, ...valeurs);
+  const W = 100, H = 40, n = valeurs.length;
+  const pts = valeurs.map((v, i) => [n <= 1 ? 0 : (i / (n - 1)) * W, H - (v / max) * H] as const);
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: 110, display: 'block' }} aria-hidden="true">
+        <path d={`${line} L${W},${H} L0,${H} Z`} fill="rgba(225,75,58,0.22)" />
+        <path d={line} fill="none" stroke={COL.rougeNeon} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: COL.texte2, marginTop: 2 }}>
+        <span>il y a 12 sem.</span><span>max {max}</span><span>cette sem.</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Profil() {
   const { id = '' } = useParams();
   const { user } = useAuth();
@@ -81,6 +111,20 @@ export default function Profil() {
               <Stat valeur={`${Math.round(p.cuites.reduce((s, c) => s + c.duree_min, 0) / 60)} h`} label="Temps au comptoir" />
             </div>
           </section>
+
+          {/* Cette semaine + courbe 12 semaines (façon Strava) */}
+          {(() => { const b = bucketsSemaines(p.cuites); return (
+            <section style={{ margin: '20px 16px 0' }}>
+              <h2 style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.1rem', color: COL.or, margin: '0 2px 10px' }}>Au comptoir, cette semaine</h2>
+              <div style={{ display: 'flex', gap: 22, marginBottom: 12 }}>
+                <div><div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.6rem', color: COL.creme, lineHeight: 1 }}>{b.consosSemaine}</div><div style={{ fontSize: '0.72rem', color: COL.texte2, marginTop: 2 }}>Consos</div></div>
+                <div><div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.6rem', color: COL.creme, lineHeight: 1 }}>{b.cuitesSemaine}</div><div style={{ fontSize: '0.72rem', color: COL.texte2, marginTop: 2 }}>Cuites</div></div>
+                <div><div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.6rem', color: COL.creme, lineHeight: 1 }}>{Math.floor(b.tempsSemaine / 60)}h{String(b.tempsSemaine % 60).padStart(2, '0')}</div><div style={{ fontSize: '0.72rem', color: COL.texte2, marginTop: 2 }}>Au comptoir</div></div>
+              </div>
+              <div style={{ fontSize: '0.8rem', color: COL.texte2, marginBottom: 4 }}>12 dernières semaines · consos</div>
+              <Courbe valeurs={b.semaines} />
+            </section>
+          ); })()}
 
           {/* Dernières cuites (façon flux Strava) */}
           <section style={{ margin: '22px 16px 0' }}>

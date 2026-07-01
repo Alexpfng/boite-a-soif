@@ -18,6 +18,8 @@ function pseudoDe(u: { user_metadata?: { pseudo?: string } } | null): string {
   return ((u?.user_metadata?.pseudo as string) || '').trim() || 'Pilier';
 }
 const arrondi = (x: number, pas: number) => Math.round(x / pas) * pas;
+const RECENT_MS = 2 * 3600 * 1000; // « en ce moment » = actif depuis moins de 2 h
+const recent = (maj: string) => Date.now() - Date.parse(maj) < RECENT_MS;
 
 export function lireReglages(): Reglages {
   return { visibilite: lireStockage<Visibilite>('geo-visibilite', 'flou'), public: lireStockage<boolean>('geo-public', false) };
@@ -65,17 +67,17 @@ export async function lireAmisPresents(): Promise<AmiPresent[]> {
   const u = await moi();
   const { data, error } = await f('presence_geo').select('user_id, pseudo, lat, lon, bac, consos, maj');
   if (error || !data) return [];
-  return (data as AmiPresent[]).map((a) => ({ ...a, bac: Number(a.bac), consos: Number(a.consos) })).filter((a) => a.user_id !== u?.id);
+  return (data as AmiPresent[]).map((a) => ({ ...a, bac: Number(a.bac), consos: Number(a.consos) })).filter((a) => a.user_id !== u?.id && recent(a.maj));
 }
 
 /** Inconnus publics à proximité, en flou (distance + direction). */
 export async function lirePublicsProches(lat: number, lon: number): Promise<PublicProche[]> {
   const u = await moi();
-  const { data, error } = await f('presence_publique').select('user_id, pseudo, lat_floue, lon_floue').limit(500);
+  const { data, error } = await f('presence_publique').select('user_id, pseudo, lat_floue, lon_floue, maj').limit(500);
   if (error || !data) return [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data as any[])
-    .filter((p) => p.user_id !== u?.id)
+    .filter((p) => p.user_id !== u?.id && recent(p.maj))
     .map((p) => ({ user_id: p.user_id, pseudo: p.pseudo, dist: distance(lat, lon, p.lat_floue, p.lon_floue), cap: cap(lat, lon, p.lat_floue, p.lon_floue) }))
     .sort((a, b) => a.dist - b.dist)
     .slice(0, 20);
@@ -86,11 +88,11 @@ export interface Zone { lat: number; lon: number; nb: number; dist: number; cap:
 /** « Les coins qui bougent » : agrège la présence publique par cellule (~500 m).
  *  Ne montre une zone qu'à partir de `seuil` piliers (anonyme, jamais un individu). */
 export async function lireZonesChaudes(lat: number, lon: number, seuil = 2): Promise<Zone[]> {
-  const { data, error } = await f('presence_publique').select('lat_floue, lon_floue').limit(1000);
+  const { data, error } = await f('presence_publique').select('lat_floue, lon_floue, maj').limit(1000);
   if (error || !data) return [];
   const cells = new Map<string, { lat: number; lon: number; nb: number }>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (data as any[]).forEach((p) => {
+  (data as any[]).filter((p) => recent(p.maj)).forEach((p) => {
     const k = `${p.lat_floue.toFixed(3)},${p.lon_floue.toFixed(3)}`;
     const e = cells.get(k) || { lat: p.lat_floue, lon: p.lon_floue, nb: 0 };
     e.nb++;

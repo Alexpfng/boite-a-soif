@@ -47,6 +47,7 @@ export default function CartePiliers() {
     navigator.geolocation.getCurrentPosition(async (g) => {
       const lat = g.coords.latitude, lon = g.coords.longitude;
       setPos({ lat, lon });
+      ecrireStockage('geo-actif', true); // garde le partage actif tant que l'appli est ouverte
       await rafraichir(lat, lon);
       setPhase('ok');
     }, () => setPhase('refus'), { enableHighAccuracy: true, timeout: 12000 });

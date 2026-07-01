@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useA11y, CRANS_TAILLE } from './AccessibilityContext';
 import { COL } from '../../ui/theme';
 import { useAuth } from '../../features/auth/AuthContext';
-import { ecrireStockage } from '../../lib/storage';
+import { ecrireStockage, lireStockage } from '../../lib/storage';
 import { lireReglages, type Visibilite } from '../../features/proximite/api';
 
 // Tiroir « Réglages » (droite) : compte, confidentialité de la carte, taille du texte.
@@ -17,6 +17,7 @@ export function AccessibilityPanel({ open, onClose }: Props) {
 
   const [vis, setVis] = useState<Visibilite>(() => lireReglages().visibilite);
   const [pub, setPub] = useState<boolean>(() => lireReglages().public);
+  const [actif, setActif] = useState<boolean>(() => lireStockage<boolean>('geo-actif', false));
 
   useEffect(() => { if (open) panelRef.current?.focus(); }, [open]);
   useEffect(() => {
@@ -30,6 +31,7 @@ export function AccessibilityPanel({ open, onClose }: Props) {
   const pseudo = ((user?.user_metadata?.pseudo as string) || '').trim() || 'Pilier';
   function changerVis(v: Visibilite) { setVis(v); ecrireStockage('geo-visibilite', v); }
   function changerPub(b: boolean) { setPub(b); ecrireStockage('geo-public', b); }
+  function changerActif(b: boolean) { setActif(b); ecrireStockage('geo-actif', b); }
   async function deco() { onClose(); await seDeconnecter(); navigate('/', { replace: true }); }
 
   const titreSection: React.CSSProperties = { margin: '22px 0 8px', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COL.texte2 };
@@ -78,6 +80,10 @@ export function AccessibilityPanel({ open, onClose }: Props) {
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, color: COL.texte2, fontSize: '0.9rem', lineHeight: 1.4 }}>
           <input type="checkbox" checked={pub} onChange={(e) => changerPub(e.target.checked)} style={{ width: 18, height: 18, flexShrink: 0 }} />
           Visible en public (des inconnus peuvent m’ajouter, en flou)
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, color: COL.texte2, fontSize: '0.9rem', lineHeight: 1.4 }}>
+          <input type="checkbox" checked={actif} onChange={(e) => changerActif(e.target.checked)} style={{ width: 18, height: 18, flexShrink: 0 }} />
+          Partager ma position tant que l’appli est ouverte (pour « les coins qui bougent »)
         </label>
         <p style={{ margin: '8px 2px 0', fontSize: '0.76rem', color: COL.texte2, lineHeight: 1.5 }}>
           « Fantôme » = invisible de tous, même de tes potes. Ta position n’est jamais partagée précise sans ton accord.

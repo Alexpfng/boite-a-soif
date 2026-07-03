@@ -4,6 +4,7 @@ import { COL, FRAUNCES } from '../ui/theme';
 import { PHRASES, type Phrase } from '../features/jukebox/phrases';
 import { parlerTavernier, tchin, capsule, cacahuete, bip, fanfare } from '../features/audio/sons';
 import { lirePropositions, ajouterProposition, likerProposition, repliqueDuMois, type Proposition } from '../features/jukebox/propositions';
+import { choisirRetourDeclamation, estIOSCourant } from '../features/jukebox/declamation';
 
 // Paires {fond, texte} pour garantir le contraste sur fond sombre.
 // On alterne selon l'index : rouge néon, or, ambre, ardoise.
@@ -47,6 +48,7 @@ export default function JukeBox() {
   const [ttsDispo, setTtsDispo] = useState<boolean>(voixDispo());
   // Réplique en cours de déclamation (retour visuel).
   const [enCours, setEnCours] = useState<string | null>(null);
+  const ios = estIOSCourant();
   // Répliques proposées par les piliers (boîte à idées locale).
   const [repliques, setRepliques] = useState<Proposition[]>([]);
   const [nouvelle, setNouvelle] = useState('');
@@ -65,9 +67,10 @@ export default function JukeBox() {
   // Déclame un texte : le tavernier parle + un petit « tchin ».
   const declamerTexte = (texte: string) => {
     const parle = parlerTavernier(texte);
-    tchin();
+    const retour = choisirRetourDeclamation({ parle, ios });
+    if (retour.jouerTchin) tchin();
     setEnCours(texte);
-    window.setTimeout(() => setEnCours((c) => (c === texte ? null : c)), parle ? 2800 : 1600);
+    window.setTimeout(() => setEnCours((c) => (c === texte ? null : c)), retour.dureeMs);
   };
   const declamer = (p: Phrase) => declamerTexte(p.texte);
 

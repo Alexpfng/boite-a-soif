@@ -2,11 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// Base : '/boite-a-soif/' au build (GitHub Pages = site de projet servi sur un
-// sous-chemin), '/' en dev local. Surchargeable via VITE_BASE pour un autre host
-// (Vercel/Netlify/domaine racine → mettre VITE_BASE=/).
+// Base : '/' par défaut, car la production publique est désormais servie sur
+// le domaine racine `la-boite-a-soif.fr`. Surchargeable via VITE_BASE pour un
+// hébergement sous sous-chemin si besoin ponctuel.
 export default defineConfig(({ command }) => ({
-  base: process.env.VITE_BASE ?? (command === 'build' ? '/boite-a-soif/' : '/'),
+  base: process.env.VITE_BASE ?? '/',
   server: { host: '::', port: 8080 },
   plugins: [
     react(),

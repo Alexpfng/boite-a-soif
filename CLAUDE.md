@@ -12,7 +12,7 @@ Aphasaide subsiste dans le code (voir « Pièges connus »). Réf. d'inspiration
 - **PWA** via `vite-plugin-pwa` (Workbox, `registerType: autoUpdate`, SW = `sw.js`).
 - **Supabase** (`@supabase/supabase-js`) : **auth email/mot de passe**, synchro cloud multi-appareils, et Realtime (Champions / Concours). ⚠️ **L'app N'EST PAS sans login** — voir « Pièges connus ».
 - Libs : `idb` (IndexedDB), `jspdf` + `qrcode` (exports/partage), `lucide-react`, `@fontsource/*`.
-- **Pas de tests**, pas d'ESLint configuré (juste Prettier). Déploiement **GitHub Pages** (base `/boite-a-soif/`).
+- **Pas de tests**, pas d'ESLint configuré (juste Prettier). Déploiement **GitHub Pages** sur le domaine principal `la-boite-a-soif.fr` (base de prod `/`).
 
 ## Commandes
 
@@ -25,7 +25,7 @@ bun run icons            # régénère les icônes PWA (sharp) — scripts/gen-i
 ```
 
 - `.env` requis en local (voir `.env.example`) : `VITE_SUPABASE_URL`, `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_PUBLISHABLE_KEY`. **Ne jamais lire ni committer `.env`.** La clé anon/publishable est publique (dans le bundle), c'est normal.
-- **Déploiement** : push sur `main` → GitHub Actions (`.github/workflows/deploy.yml`) build en Bun et publie sur GitHub Pages. Les secrets Supabase viennent des *repo variables* CI. Fallback SPA via `dist/404.html`.
+- **Déploiement** : push sur `main` → GitHub Actions (`.github/workflows/deploy.yml`) build en Bun et publie sur GitHub Pages. Le domaine canonique publié est `la-boite-a-soif.fr` via `public/CNAME`. Les secrets Supabase viennent des *repo variables* CI. Fallback SPA via `dist/404.html`. La redirection du `.com` se gère chez le registrar/DNS, pas dans le repo.
 - Migrations Supabase versionnées dans `supabase/migrations/` (appliquer côté projet Supabase, pas automatiquement par le déploiement front).
 
 ## Architecture
@@ -52,7 +52,7 @@ Features annexes : `concours/` (tournois par code court, Realtime), `proximite/`
 - **Widmark** (`features/pesealco/widmark.ts`) : BAC = accumulation chronologique des consos, apport `grammes / (r·masse)` avec `r` = 0.68 (h) / 0.55 (f) / 0.62 (autre), élimination `BETA = 0.15 g/L/h` entre chaque prise. Utilitaires : `grammesAlcool`, `picBAC`, `tempsSousSeuil`/`tempsRetourZero`, `formaterDuree`. Seuils FR : `LIMITE_LEGALE = 0.5`, `LIMITE_PROBATOIRE = 0.2`. 7 paliers d'ivresse satiriques (`etatBac`) avec `bredouiller()` (déforme le texte selon le BAC) + `paramsIvresse()` (pitch/débit TTS). **Toujours conserver l'avertissement « estimation ludique, ne remplace pas un éthylotest, ne pas conduire ».**
 - **TTS** (`useSpeech.ts`) : Web Speech API, voix `fr-FR`, `rate 0.9`, file de blocs avec surlignage. Tolère l'absence d'API (`disponible`).
 - **Web Audio** (`audio/sons.ts`) : bruitages 100 % synthétisés, **aucun asset audio**. AudioContext + TTS « déverrouillés » au 1er geste utilisateur (contrainte autoplay iOS/Safari/Chrome) ; gère `voiceschanged` asynchrone.
-- **PWA** (`vite.config.ts`) : manifest inline (`La Boît'à Soif`, `theme/background #1B1917`, icônes 192/512/maskable), `navigateFallback: index.html`, runtime caching NetworkFirst sur navigations. `base` = `/boite-a-soif/` au build, `/` en dev, surchargeable par `VITE_BASE` (mettre `/` pour un hébergement à la racine).
+- **PWA** (`vite.config.ts`) : manifest inline (`La Boît'à Soif`, `theme/background #1B1917`, icônes 192/512/maskable), `navigateFallback: index.html`, runtime caching NetworkFirst sur navigations. `base` = `/` par défaut en dev comme en prod publique, surchargeable par `VITE_BASE` pour un hébergement ponctuel sous sous-chemin.
 - **Stockage** (`lib/storage.ts`) : localStorage namespacé par utilisateur (`aphasaide:u:<id>:<clé>`) ; les clés « globales » (a11y, bannière d'install) restent par-appareil. `cloudSync.ts` = « dernière écriture gagne » sur un blob JSONB (table `donnees_utilisateur`, RLS), tolérant hors-ligne / table absente.
 - **Accessibilité** : héritée d'Aphasaide et toujours active — base 18px, `--font-scale` (100/115/130/150 %), mode confort (`--target-min 64px`). Le contenu est humoristique mais le socle a11y reste sérieux.
 
@@ -71,7 +71,7 @@ DA **« enseigne de bar vintage / PMU »** posée par-dessus la structure Aphasa
 - **Héritage Aphasaide partout.** Préfixe localStorage = `aphasaide:`, présence de features/pages médicales détournées (`bienetre/journal`, `outils/CarteAphasique`, `ParlePourMoi`, `SchemaCorps`, `TableauLangageAssiste`, etc.). Certaines ont été recyclées en gags, d'autres sont résiduelles — vérifier l'usage réel avant de s'appuyer dessus. Ne pas renommer le préfixe sans plan de migration (casse les données existantes).
 - **Champions n'est pas 100 % mock** : `mock.ts` est un fallback simulé, mais `presence.ts` fait de la vraie synchro Realtime. Idem `concours/` et `proximite/` dépendent de Supabase + RLS.
 - **Tables non typées** : `cloudSync.ts`, `presence.ts`, `concours/api.ts` font `(supabase as any).from(...)` car les tables ne sont pas dans les types générés par Lovable. Attendu, ne pas « corriger » à l'aveugle.
-- **Base d'URL** : oublier `VITE_BASE`/`base` casse les liens sur GitHub Pages (servi sous `/boite-a-soif/`). Le `basename` du router en dépend.
+- **Base d'URL** : oublier `VITE_BASE`/`base` casse les liens et assets. Le `basename` du router en dépend. En production publique, on sert désormais l'app à la racine `/` sur `la-boite-a-soif.fr`.
 - **Typecheck bloquant** : `strict` + `noUnusedLocals`/`noUnusedParameters` → `bun run build` échoue au moindre import/param inutilisé.
 
 ## Conventions

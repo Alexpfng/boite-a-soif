@@ -6,6 +6,9 @@ import { IconeHautParleur } from '../ui/icons';
 import { usePeseAlco } from '../features/pesealco/usePeseAlco';
 import { PRESETS, formaterDuree, LIMITE_LEGALE, paramsIvresse, bredouiller, type Sexe } from '../features/pesealco/widmark';
 import { parlerTavernier, capsule } from '../features/audio/sons';
+import { partagerImageSoiree } from '../features/pesealco/imageSoiree';
+import { lireXP, niveauDepuisXP } from '../features/cabine/progression';
+import { useAuth } from '../features/auth/AuthContext';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
@@ -23,9 +26,25 @@ export default function PeseAlco() {
   } = usePeseAlco();
 
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [modalDanger, setModalDanger] = useState(false);
   const [nudge, setNudge] = useState<string | null>(null);
   const dangerPrec = useRef(etat.danger);
+
+  // Image satirique de la soirée à balancer dans le groupe (WhatsApp & co).
+  const partagerSoiree = async () => {
+    const pseudo = ((user?.user_metadata?.pseudo as string) || '').trim() || 'Pilier';
+    const resultat = await partagerImageSoiree({
+      pseudo,
+      bac,
+      titreEtat: etat.titre,
+      emoji: etat.emoji,
+      nbConsos: consos.length,
+      titreNiveau: niveauDepuisXP(lireXP()).titre,
+    });
+    if (resultat === 'telecharge') montrerNudge('🖼️ Image enregistrée — balance-la dans le groupe !');
+    else if (resultat === 'echec') montrerNudge('Impossible de générer l’image, réessaie.');
+  };
 
   // Pop la modale d'alerte au moment où l'on bascule en zone danger.
   useEffect(() => {
@@ -173,6 +192,11 @@ export default function PeseAlco() {
             Vider (sans garder)
           </button>
         </div>
+
+        <button onClick={partagerSoiree} disabled={consos.length === 0}
+          className="pmu-arcade pmu-arcade--or" style={{ width: '100%', marginTop: 12, minHeight: 56, opacity: consos.length ? 1 : 0.5 }}>
+          📸 Partager ma soirée dans le groupe
+        </button>
 
         <button onClick={() => { cloturerSession(); montrerNudge('🍺 Soirée enregistrée dans ton historique et ton profil !'); }} disabled={consos.length === 0}
           className="pmu-arcade" style={{ width: '100%', marginTop: 12, minHeight: 56, opacity: consos.length ? 1 : 0.5 }}>

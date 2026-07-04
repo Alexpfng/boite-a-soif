@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { InstallBanner } from '../components/ui/InstallBanner';
@@ -5,6 +6,8 @@ import { Wordmark, ChevronDroit } from '../ui/icons';
 import { COL, FRAUNCES } from '../ui/theme';
 import { usePeseAlco } from '../features/pesealco/usePeseAlco';
 import { useAuth } from '../features/auth/AuthContext';
+import { PHRASES } from '../features/jukebox/phrases';
+import { parlerTavernier, tchin } from '../features/audio/sons';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
@@ -61,8 +64,18 @@ function Comptoir({ bg, fg, border, onClick, icon, label }: {
 export default function Accueil() {
   const navigate = useNavigate();
   const { bac, etat, consos } = usePeseAlco();
-  const { user, seDeconnecter } = useAuth();
+  const { user, seDeconnecter, estInvite } = useAuth();
   const pseudo = ((user?.user_metadata?.pseudo as string) || '').trim() || 'Pilier';
+
+  // « Une vanne, patron ! » : un geste = un gag, sans quitter l'accueil.
+  const [vanne, setVanne] = useState<string | null>(null);
+  const vanneAuHasard = () => {
+    const p = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+    parlerTavernier(p.texte);
+    tchin();
+    setVanne(p.texte);
+    window.setTimeout(() => setVanne((v) => (v === p.texte ? null : v)), 3200);
+  };
 
   return (
     <AppShell>
@@ -94,13 +107,22 @@ export default function Accueil() {
               {pseudo.charAt(0).toUpperCase()}
             </span>
             <span style={{ flex: 1, minWidth: 0, lineHeight: 1.25 }}>
-              <span style={{ display: 'block', fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COL.texte2 }}>Connecté</span>
+              <span style={{ display: 'block', fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COL.texte2 }}>{estInvite ? 'En invité 🎭' : 'Connecté'}</span>
               <span style={{ display: 'block', fontWeight: 800, color: COL.creme, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pseudo}</span>
             </span>
-            <button onClick={seDeconnecter}
-              style={{ flexShrink: 0, minHeight: 40, padding: '0 14px', borderRadius: 10, border: `2px solid ${COL.bleu1}`, background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem' }}>
-              Déconnexion
-            </button>
+            {/* Pour un invité, se déconnecter = perdre le compte anonyme : on
+                propose plutôt de le garder (conversion en vrai compte). */}
+            {estInvite ? (
+              <button onClick={() => navigate('/connexion')}
+                style={{ flexShrink: 0, minHeight: 40, padding: '0 14px', borderRadius: 10, border: `2px solid ${COL.or}`, background: 'transparent', color: COL.or, fontWeight: 800, fontSize: '0.85rem' }}>
+                Garder mon compte
+              </button>
+            ) : (
+              <button onClick={seDeconnecter}
+                style={{ flexShrink: 0, minHeight: 40, padding: '0 14px', borderRadius: 10, border: `2px solid ${COL.bleu1}`, background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem' }}>
+                Déconnexion
+              </button>
+            )}
           </div>
         ) : (
           <button onClick={() => navigate('/connexion')}
@@ -136,6 +158,21 @@ export default function Accueil() {
             {consos.length === 0 ? 'Aucune conso pour l’instant. Appuie pour ouvrir l’ardoise.' : `${consos.length} conso${consos.length > 1 ? 's' : ''} ce soir`}
           </div>
         </button>
+      </section>
+
+      {/* Un geste = un gag : le tavernier balance une vanne au hasard */}
+      <section aria-label="Une vanne au hasard" style={{ margin: '12px 16px 0' }}>
+        <button onClick={vanneAuHasard} className="pmu-arcade"
+          style={{ width: '100%', minHeight: 64, fontSize: '1.05rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <span style={{ fontSize: '1.4rem' }} aria-hidden="true">🎲</span>
+          Une vanne, patron !
+        </button>
+        {vanne && (
+          <div role="status" style={{ marginTop: 10, background: COL.panneau, border: `1px solid ${COL.or}`, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: '1.3rem' }} aria-hidden="true">🔊</span>
+            <span style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.35, color: COL.creme }}>« {vanne} »</span>
+          </div>
+        )}
       </section>
 
       {/* Les 4 comptoirs */}

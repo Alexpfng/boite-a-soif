@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../features/auth/AuthContext';
+import { entrerEnInvite, convertirInvite } from '../features/auth/invite';
 import { COL, FRAUNCES } from '../ui/theme';
 
 type Mode = 'connexion' | 'inscription';
@@ -13,11 +14,13 @@ function messageErreur(brut: string): string {
   if (m.includes('password should be at least')) return 'Le mot de passe doit faire au moins 6 caractères.';
   if (m.includes('unable to validate email') || m.includes('invalid email')) return 'Adresse email invalide.';
   if (m.includes('email not confirmed')) return 'Vérifie ta boîte mail pour confirmer ton compte avant de te connecter.';
+  if (m.includes('anonymous sign-ins are disabled') || m.includes('anonymous provider'))
+    return 'Le mode invité est indisponible pour le moment. Crée un compte, c’est gratuit.';
   return 'Une erreur est survenue. Réessaie dans un instant.';
 }
 
 export default function Connexion() {
-  const { user, chargement } = useAuth();
+  const { user, chargement, estInvite } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const destination = (location.state as { from?: string } | null)?.from || '/app';
@@ -30,7 +33,28 @@ export default function Connexion() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
-  if (!chargement && user) return <Navigate to={destination} replace />;
+  const conversion = !chargement && !!user && estInvite;
+
+  // Un invité qui arrive ici vient « garder son compte » : formulaire d'inscription d'office.
+  useEffect(() => {
+    if (conversion) setMode('inscription');
+  }, [conversion]);
+
+  if (!chargement && user && !estInvite) return <Navigate to={destination} replace />;
+
+  async function entrerInvite() {
+    setErreur(null);
+    setInfo(null);
+    setEnCours(true);
+    try {
+      await entrerEnInvite();
+      navigate(destination, { replace: true });
+    } catch (err) {
+      setErreur(messageErreur(err instanceof Error ? err.message : String(err)));
+    } finally {
+      setEnCours(false);
+    }
+  }
 
   async function soumettre(e: FormEvent) {
     e.preventDefault();
@@ -38,6 +62,14 @@ export default function Connexion() {
     setInfo(null);
     setEnCours(true);
     try {
+      if (conversion && mode === 'inscription') {
+        // Conversion invité → vrai compte : mêmes données, même user.id.
+        if (pseudo.trim().length < 2) { setErreur('Choisis un pseudo (2 caractères minimum).'); setEnCours(false); return; }
+        await convertirInvite(email.trim(), motDePasse, pseudo.trim().slice(0, 24));
+        setInfo('Compte gardé ! Vérifie ta boîte mail pour confirmer ton adresse — tes données de comptoir, elles, sont déjà au chaud.');
+        setEnCours(false);
+        return;
+      }
       if (mode === 'inscription') {
         if (pseudo.trim().length < 2) { setErreur('Choisis un pseudo (2 caractères minimum).'); setEnCours(false); return; }
         const { data, error } = await supabase.auth.signUp({
@@ -83,10 +115,12 @@ export default function Connexion() {
 
         <div style={{ background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 22, boxShadow: '0 8px 24px rgba(0,0,0,0.5)', padding: '26px 22px' }}>
           <h1 className="pmu-titre" style={{ fontSize: '1.5rem', textAlign: 'center' }}>
-            {mode === 'connexion' ? 'Se connecter' : 'Créer un compte'}
+            {conversion && mode === 'inscription' ? 'Garder mon compte' : mode === 'connexion' ? 'Se connecter' : 'Créer un compte'}
           </h1>
           <p style={{ margin: '6px 0 20px', fontSize: '0.92rem', color: COL.texte2, textAlign: 'center', textTransform: 'none' }}>
-            {mode === 'connexion' ? 'Retrouve tes potes et tes données.' : 'Ton espace de pilier, gratuit.'}
+            {conversion && mode === 'inscription'
+              ? 'Ton ardoise et tes exploits te suivront sur tous tes appareils.'
+              : mode === 'connexion' ? 'Retrouve tes potes et tes données.' : 'Ton espace de pilier, gratuit.'}
           </p>
 
           {info && (
@@ -122,9 +156,29 @@ export default function Connexion() {
 
             <button type="submit" disabled={enCours} className="pmu-arcade"
               style={{ width: '100%', minHeight: 56, fontSize: '1.05rem', opacity: enCours ? 0.7 : 1 }}>
-              {enCours ? 'Un instant…' : mode === 'connexion' ? 'Se connecter' : 'Créer mon compte'}
+              {enCours ? 'Un instant…' : conversion && mode === 'inscription' ? 'Garder mon compte' : mode === 'connexion' ? 'Se connecter' : 'Créer mon compte'}
             </button>
           </form>
+
+          {/* Entrée sans compte : zéro friction au comptoir. */}
+          {!conversion && (
+            <div style={{ margin: '18px 0 0', textAlign: 'center' }}>
+              <button type="button" onClick={entrerInvite} disabled={enCours}
+                style={{ width: '100%', minHeight: 52, fontSize: '0.98rem', fontWeight: 800, background: 'transparent', border: `2px dashed ${COL.or}`, borderRadius: 14, color: COL.or, cursor: 'pointer', opacity: enCours ? 0.7 : 1 }}>
+                🎭 Entrer en invité, sans compte
+              </button>
+              <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: COL.texte2, lineHeight: 1.4 }}>
+                Tes données restent sur cet appareil tant que tu ne crées pas de compte.
+              </p>
+            </div>
+          )}
+          {conversion && (
+            <p style={{ margin: '14px 0 0', textAlign: 'center' }}>
+              <Link to="/app" style={{ color: COL.texte2, fontWeight: 700, fontSize: '0.88rem', textDecoration: 'underline' }}>
+                ← Retourner au comptoir en invité
+              </Link>
+            </p>
+          )}
 
           <p style={{ margin: '18px 0 0', textAlign: 'center', fontSize: '0.92rem', color: COL.texte2 }}>
             {mode === 'connexion' ? 'Pas encore de compte ?' : 'Déjà un compte ?'}{' '}

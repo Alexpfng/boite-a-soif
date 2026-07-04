@@ -34,6 +34,26 @@ export async function chercherProfils(q: string, monId: string): Promise<ProfilT
   return data as ProfilTrouve[];
 }
 
+/** Pseudo public d'un pilier (table profiles, lecture publique). */
+export async function lirePseudoProfil(id: string): Promise<string> {
+  const { data } = await from('profiles').select('pseudo').eq('id', id).maybeSingle();
+  return ((data as { pseudo?: string } | null)?.pseudo || 'Pilier').trim() || 'Pilier';
+}
+
+/**
+ * S'abonne aux changements de mes amitiés (Realtime, RLS respectée) pour voir
+ * arriver une demande sans recharger. Meilleure-chance : si la table n'est pas
+ * publiée sur le canal Realtime, aucun évènement n'arrive (le chargement au
+ * montage reste la source de vérité). Renvoie un désabonnement.
+ */
+export function abonnerAmities(onChange: () => void): () => void {
+  const canal = supabase
+    .channel('amities')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'amities' }, () => onChange())
+    .subscribe();
+  return () => { supabase.removeChannel(canal); };
+}
+
 export async function envoyerDemande(destinataireId: string): Promise<boolean> {
   const { data: u } = await supabase.auth.getUser();
   const moi = u.user?.id;

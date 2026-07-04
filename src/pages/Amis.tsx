@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import QRCode from 'qrcode';
 import { AppShell } from '../components/layout/AppShell';
 import { COL, FRAUNCES } from '../ui/theme';
 import { useAuth } from '../features/auth/AuthContext';
 import {
   chercherProfils, envoyerDemande, accepterDemande, retirerAmitie, listerAmities,
+  lirePseudoProfil, abonnerAmities,
   type LienAmi, type ProfilTrouve,
 } from '../features/champions/amis';
 
@@ -28,6 +30,48 @@ export default function Amis() {
 
   useEffect(() => { recharger(); }, [recharger]);
 
+  // Les demandes arrivent en direct (si la table est publiée en Realtime).
+  useEffect(() => {
+    if (!monId) return;
+    return abonnerAmities(recharger);
+  }, [monId, recharger]);
+
+  const message = (m: string) => { setFlash(m); window.setTimeout(() => setFlash((c) => (c === m ? null : c)), 2500); };
+
+  // ── Lien de pote : ouvrir /amis?pote=<id> envoie la demande tout seul ──
+  const lienPote = monId ? `${window.location.origin}${import.meta.env.BASE_URL}amis?pote=${monId}` : '';
+  const [qrPote, setQrPote] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const demandeAuto = useRef(false); // une seule tentative par visite
+
+  useEffect(() => {
+    const cible = searchParams.get('pote');
+    if (!cible || !monId || demandeAuto.current) return;
+    demandeAuto.current = true;
+    setSearchParams({}, { replace: true }); // nettoie l'URL (pas de re-demande au refresh)
+    (async () => {
+      if (cible === monId) { message('Ça, c’est TON lien de pote. Fais-le scanner aux autres 😄'); return; }
+      const pseudoCible = await lirePseudoProfil(cible);
+      const dejaLie = (await listerAmities(monId)).some((l) => l.autreId === cible);
+      if (dejaLie) { message(`${pseudoCible} et toi, c'est déjà lié 🍻`); return; }
+      if (await envoyerDemande(cible)) {
+        message(`Demande envoyée à ${pseudoCible} 🍻 — il n'a plus qu'à accepter.`);
+        recharger();
+      } else {
+        message('Demande impossible (souci réseau ?). Réessaie via le lien.');
+      }
+    })();
+  }, [searchParams, monId, recharger, setSearchParams]);
+
+  const basculerQr = async () => {
+    if (qrPote) { setQrPote(null); return; }
+    try {
+      setQrPote(await QRCode.toDataURL(lienPote, { width: 480, margin: 2, color: { dark: '#1B1917', light: '#F3E8CF' } }));
+    } catch {
+      message('Impossible de générer le QR code.');
+    }
+  };
+
   // Recherche en direct (débouncée).
   useEffect(() => {
     if (!monId) return;
@@ -37,8 +81,6 @@ export default function Amis() {
     }, 350);
     return () => clearTimeout(t);
   }, [recherche, monId]);
-
-  const message = (m: string) => { setFlash(m); window.setTimeout(() => setFlash((c) => (c === m ? null : c)), 2500); };
 
   const idsLies = useMemo(() => new Set(liens.map((l) => l.autreId)), [liens]);
 
@@ -55,15 +97,19 @@ export default function Amis() {
   const accepter = async (l: LienAmi) => { if (await accepterDemande(l.amitieId)) { message(`${l.pseudo} est dans ta bande !`); recharger(); } };
   const retirer = async (l: LienAmi) => { if (await retirerAmitie(l.amitieId)) recharger(); };
 
-  // Partage du lien de l'appli : feuille de partage native, sinon copie du lien.
+  // Partage du LIEN DE POTE : le pote l'ouvre (même en invité), sa demande
+  // part toute seule — zéro recherche de pseudo pour qui ne connaît pas l'appli.
   const inviter = async () => {
-    const url = `${window.location.origin}${import.meta.env.BASE_URL}`;
-    const partage = { title: "La Boît'à Soif", text: "Rejoins-moi sur La Boît'à Soif 🍻 — l'appli des piliers de bar ! Crée ton compte et on se retrouve au classement.", url };
+    const partage = {
+      title: "La Boît'à Soif",
+      text: "Deviens mon pote sur La Boît'à Soif 🍻 — ouvre ce lien, entre (même en invité), et ta demande m'arrive direct.",
+      url: lienPote,
+    };
     if (typeof navigator.share === 'function') {
       try { await navigator.share(partage); return; } catch { return; }
     }
-    try { await navigator.clipboard.writeText(url); message('Lien copié ! Envoie-le à tes potes 🍻'); }
-    catch { message(url); }
+    try { await navigator.clipboard.writeText(lienPote); message('Lien de pote copié ! Envoie-le 🍻'); }
+    catch { message(lienPote); }
   };
 
   const btn: React.CSSProperties = { minHeight: 44, padding: '0 14px', borderRadius: 10, fontWeight: 800, fontSize: '0.85rem', border: 'none' };
@@ -73,18 +119,31 @@ export default function Amis() {
       <section style={{ background: '#14110F', borderBottom: `2px solid ${COL.or}`, padding: '22px 22px 20px' }}>
         <button onClick={() => navigate('/champions')} style={{ border: 'none', background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem', padding: 0, marginBottom: 8 }}>← Les Champions</button>
         <h1 className="pmu-titre" style={{ fontSize: '1.9rem', margin: 0 }}>Mes <span className="accent">potes</span></h1>
-        <p style={{ margin: '6px 0 0', color: COL.texte2, fontSize: '0.92rem', lineHeight: 1.45 }}>Ajoute tes piliers par leur pseudo pour les voir dans le classement en direct.</p>
+        <p style={{ margin: '6px 0 0', color: COL.texte2, fontSize: '0.92rem', lineHeight: 1.45 }}>Envoie ton lien de pote (ou fais scanner ton QR) : la demande part toute seule.</p>
       </section>
 
       {flash && (
         <div role="status" style={{ margin: '14px 16px 0', background: COL.panneau, border: `1px solid ${COL.or}`, borderRadius: 12, padding: '12px 14px', color: COL.creme, fontWeight: 600, fontSize: '0.9rem' }}>{flash}</div>
       )}
 
-      {/* Inviter des potes (partage du lien de l'appli) */}
+      {/* Inviter : lien de pote (demande automatique) + QR à faire scanner */}
       <section style={{ margin: '16px 16px 0' }}>
-        <button onClick={inviter} className="pmu-arcade" style={{ width: '100%', minHeight: 56, fontSize: '1rem' }}>📤 Inviter des potes</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={inviter} className="pmu-arcade" style={{ flex: 1, minHeight: 56, fontSize: '1rem' }}>🤝 Envoyer mon lien de pote</button>
+          <button onClick={basculerQr} aria-expanded={qrPote != null} className="pmu-arcade pmu-arcade--ardoise" style={{ minHeight: 56, padding: '0 16px', fontSize: '0.95rem' }}>
+            {qrPote ? '✕' : '📷 QR'}
+          </button>
+        </div>
+        {qrPote && (
+          <div style={{ marginTop: 12, textAlign: 'center' }}>
+            <img src={qrPote} alt="QR code de mon lien de pote" width={200} height={200}
+              style={{ display: 'block', margin: '0 auto', borderRadius: 12, border: `2px solid ${COL.or}` }} />
+            <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: COL.texte2 }}>Fais scanner : la demande de pote part toute seule.</p>
+          </div>
+        )}
         <p style={{ margin: '8px 2px 0', fontSize: '0.8rem', color: COL.texte2, lineHeight: 1.45 }}>
-          Partage le lien de l&apos;appli. Une fois qu&apos;ils ont créé leur compte, ajoute-les par leur pseudo ci-dessous.
+          Ton pote ouvre le lien, entre dans la boîte (même en invité), et sa demande t&apos;arrive
+          directement — rien à chercher, rien à taper.
         </p>
       </section>
 
@@ -135,7 +194,7 @@ export default function Amis() {
         <h2 style={{ margin: '0 0 10px 2px', fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.1rem', color: COL.or }}>Ma bande ({amis.length})</h2>
         {amis.length === 0 ? (
           <div style={{ background: COL.panneau, border: `2px dashed ${COL.bleu1}`, borderRadius: 14, padding: '18px 16px', textAlign: 'center', color: COL.texte2 }}>
-            Pas encore de pote. Cherche un pseudo ci-dessus pour lancer ta tablée !
+            Pas encore de pote. Envoie ton lien de pote ci-dessus pour lancer ta tablée !
           </div>
         ) : (
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>

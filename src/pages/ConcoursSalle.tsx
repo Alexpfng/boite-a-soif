@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import QRCode from 'qrcode';
 import { AppShell } from '../components/layout/AppShell';
 import { COL, FRAUNCES } from '../ui/theme';
 import { useAuth } from '../features/auth/AuthContext';
@@ -148,6 +149,16 @@ export default function ConcoursSalle() {
 
   useEffect(() => { if (concours?.statut === 'termine') tchin(); }, [concours?.statut]);
 
+  // QR du lien de la salle : au bar, scanner > taper un code.
+  const [qr, setQr] = useState<string | null>(null);
+  useEffect(() => {
+    if (!concours?.code || concours.statut !== 'attente') { setQr(null); return; }
+    const url = `${window.location.origin}${import.meta.env.BASE_URL}concours/${concours.code}`;
+    QRCode.toDataURL(url, { width: 480, margin: 2, color: { dark: '#1B1917', light: '#F3E8CF' } })
+      .then(setQr)
+      .catch(() => setQr(null));
+  }, [concours?.code, concours?.statut]);
+
   const estHote = concours != null && concours.hote === monId;
   const jeux = concours && concours.jeux && concours.jeux.length ? concours.jeux : DEFAUT;
   const nbManches = jeux.length;
@@ -195,6 +206,15 @@ export default function ConcoursSalle() {
         <div style={{ background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '14px 16px', textAlign: 'center' }}>
           <div style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COL.texte2 }}>Code à partager</div>
           <div style={{ fontFamily: FRAUNCES, fontWeight: 800, fontSize: '2.2rem', color: COL.or, letterSpacing: '0.06em' }}>{concours.code}</div>
+          {qr && (
+            <img src={qr} alt={`QR code pour rejoindre le tournoi ${concours.code}`} width={190} height={190}
+              style={{ display: 'block', margin: '12px auto 0', borderRadius: 12, border: `2px solid ${COL.or}` }} />
+          )}
+          {qr && (
+            <div style={{ fontSize: '0.78rem', color: COL.texte2, marginTop: 6 }}>
+              Fais scanner ce QR aux potes — plus rapide que taper le code.
+            </div>
+          )}
           <button onClick={() => { const url = `${window.location.origin}${import.meta.env.BASE_URL}concours/${concours.code}`; if (navigator.share) navigator.share({ title: 'Tournoi Boît’à Soif', text: `Rejoins mon tournoi : ${concours.code}`, url }).catch(() => {}); else navigator.clipboard?.writeText(url); }}
             className="pmu-arcade pmu-arcade--ardoise" style={{ marginTop: 10, padding: '0 18px', minHeight: 44 }}>📤 Partager</button>
         </div>

@@ -7,7 +7,8 @@ import { COL, FRAUNCES } from '../ui/theme';
 import { usePeseAlco } from '../features/pesealco/usePeseAlco';
 import { useAuth } from '../features/auth/AuthContext';
 import { PHRASES } from '../features/jukebox/phrases';
-import { parlerTavernier, tchin } from '../features/audio/sons';
+import { parlerTavernier, tchin, fanfare } from '../features/audio/sons';
+import { aperoDuJour, aperoDejaFait, releverApero, XP_APERO } from '../features/cabine/aperoDuJour';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
@@ -75,6 +76,16 @@ export default function Accueil() {
     tchin();
     setVanne(p.texte);
     window.setTimeout(() => setVanne((v) => (v === p.texte ? null : v)), 3200);
+  };
+
+  // L'Apéro du jour : défi quotidien, XP à la clé (une fois par jour).
+  const apero = aperoDuJour();
+  const [aperoFait, setAperoFait] = useState<boolean>(() => aperoDejaFait());
+  const releverDefi = () => {
+    if (releverApero()) {
+      fanfare();
+      setAperoFait(true);
+    }
   };
 
   return (
@@ -173,6 +184,30 @@ export default function Accueil() {
             <span style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.35, color: COL.creme }}>« {vanne} »</span>
           </div>
         )}
+      </section>
+
+      {/* L'Apéro du jour : le rituel quotidien du comptoir */}
+      <section aria-label="L'Apéro du jour" style={{ margin: '12px 16px 0' }}>
+        <div className="pmu-ardoise" style={{ padding: '16px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: '1.4rem' }} aria-hidden="true">{apero.emoji}</span>
+            <h2 className="craie" style={{ margin: 0, fontFamily: FRAUNCES, fontWeight: 800, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>
+              L&apos;Apéro du jour
+            </h2>
+            <span className="craie-2" style={{ fontSize: '0.7rem', fontWeight: 800 }}>{aperoFait ? '✅ relevé' : `+${XP_APERO} XP`}</span>
+          </div>
+          <p className="craie" style={{ margin: '10px 0 12px', fontSize: '0.95rem', lineHeight: 1.5 }}>{apero.texte}</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button onClick={() => parlerTavernier(apero.texte)}
+              className="pmu-arcade pmu-arcade--ardoise" style={{ minHeight: 46, padding: '0 14px', fontSize: '0.86rem' }}>
+              🔊 Le tavernier l&apos;annonce
+            </button>
+            <button onClick={releverDefi} disabled={aperoFait}
+              className="pmu-arcade pmu-arcade--or" style={{ minHeight: 46, padding: '0 14px', fontSize: '0.86rem', opacity: aperoFait ? 0.55 : 1 }}>
+              {aperoFait ? 'Défi relevé, champion' : '💪 Défi relevé !'}
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Les 4 comptoirs */}

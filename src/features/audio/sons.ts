@@ -245,4 +245,15 @@ if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') reveiller();
   });
+
+  // Retour haptique global : toute touche « arcade » vibre brièvement sous le
+  // doigt (ressenti physique de juke-box). Silencieux si non supporté.
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      const cible = e.target as Element | null;
+      if (cible && typeof cible.closest === 'function' && cible.closest('.pmu-arcade')) vibrer(12);
+    },
+    { passive: true },
+  );
 }

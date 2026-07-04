@@ -32,6 +32,27 @@ export default defineConfig(({ command }) => ({
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // Appui long sur l'icône : accès direct aux comptoirs (Android/desktop).
+        shortcuts: [
+          {
+            name: 'Le Juke-Box à Conneries',
+            short_name: 'Juke-Box',
+            url: './juke-box',
+            icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Le Pèse-Alco',
+            short_name: 'Pèse-Alco',
+            url: './pese-alco',
+            icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: "L'Ardoise des Comptes",
+            short_name: 'Ardoise',
+            url: './ardoise',
+            icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],

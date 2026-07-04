@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { InstallBanner } from '../components/ui/InstallBanner';
@@ -5,6 +6,10 @@ import { Wordmark, ChevronDroit } from '../ui/icons';
 import { COL, FRAUNCES } from '../ui/theme';
 import { usePeseAlco } from '../features/pesealco/usePeseAlco';
 import { useAuth } from '../features/auth/AuthContext';
+import { PHRASES } from '../features/jukebox/phrases';
+import { parlerTavernier, tchin, fanfare } from '../features/audio/sons';
+import { aperoDuJour, aperoDejaFait, releverApero, XP_APERO } from '../features/cabine/aperoDuJour';
+import { listerAmities, accepterDemande, retirerAmitie, abonnerAmities, type LienAmi } from '../features/champions/amis';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
@@ -61,8 +66,49 @@ function Comptoir({ bg, fg, border, onClick, icon, label }: {
 export default function Accueil() {
   const navigate = useNavigate();
   const { bac, etat, consos } = usePeseAlco();
-  const { user, seDeconnecter } = useAuth();
+  const { user, seDeconnecter, estInvite } = useAuth();
   const pseudo = ((user?.user_metadata?.pseudo as string) || '').trim() || 'Pilier';
+
+  // « Une vanne, patron ! » : un geste = un gag, sans quitter l'accueil.
+  const [vanne, setVanne] = useState<string | null>(null);
+  const vanneAuHasard = () => {
+    const p = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+    parlerTavernier(p.texte);
+    tchin();
+    setVanne(p.texte);
+    window.setTimeout(() => setVanne((v) => (v === p.texte ? null : v)), 3200);
+  };
+
+  // Demandes de potes reçues : visibles dès l'accueil, sans aller les chercher.
+  const monId = user?.id ?? null;
+  const [demandes, setDemandes] = useState<LienAmi[]>([]);
+  const chargerDemandes = useCallback(() => {
+    if (monId) listerAmities(monId).then((ls) => setDemandes(ls.filter((l) => l.sens === 'recue')));
+  }, [monId]);
+  useEffect(() => {
+    if (!monId) return;
+    chargerDemandes();
+    return abonnerAmities(chargerDemandes); // arrivée en direct si publié en Realtime
+  }, [monId, chargerDemandes]);
+  const accepterPote = async (l: LienAmi) => {
+    if (await accepterDemande(l.amitieId)) {
+      tchin();
+      chargerDemandes();
+    }
+  };
+  const refuserPote = async (l: LienAmi) => {
+    if (await retirerAmitie(l.amitieId)) chargerDemandes();
+  };
+
+  // L'Apéro du jour : défi quotidien, XP à la clé (une fois par jour).
+  const apero = aperoDuJour();
+  const [aperoFait, setAperoFait] = useState<boolean>(() => aperoDejaFait());
+  const releverDefi = () => {
+    if (releverApero()) {
+      fanfare();
+      setAperoFait(true);
+    }
+  };
 
   return (
     <AppShell>
@@ -94,13 +140,22 @@ export default function Accueil() {
               {pseudo.charAt(0).toUpperCase()}
             </span>
             <span style={{ flex: 1, minWidth: 0, lineHeight: 1.25 }}>
-              <span style={{ display: 'block', fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COL.texte2 }}>Connecté</span>
+              <span style={{ display: 'block', fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COL.texte2 }}>{estInvite ? 'En invité 🎭' : 'Connecté'}</span>
               <span style={{ display: 'block', fontWeight: 800, color: COL.creme, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pseudo}</span>
             </span>
-            <button onClick={seDeconnecter}
-              style={{ flexShrink: 0, minHeight: 40, padding: '0 14px', borderRadius: 10, border: `2px solid ${COL.bleu1}`, background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem' }}>
-              Déconnexion
-            </button>
+            {/* Pour un invité, se déconnecter = perdre le compte anonyme : on
+                propose plutôt de le garder (conversion en vrai compte). */}
+            {estInvite ? (
+              <button onClick={() => navigate('/connexion')}
+                style={{ flexShrink: 0, minHeight: 40, padding: '0 14px', borderRadius: 10, border: `2px solid ${COL.or}`, background: 'transparent', color: COL.or, fontWeight: 800, fontSize: '0.85rem' }}>
+                Garder mon compte
+              </button>
+            ) : (
+              <button onClick={seDeconnecter}
+                style={{ flexShrink: 0, minHeight: 40, padding: '0 14px', borderRadius: 10, border: `2px solid ${COL.bleu1}`, background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem' }}>
+                Déconnexion
+              </button>
+            )}
           </div>
         ) : (
           <button onClick={() => navigate('/connexion')}
@@ -114,6 +169,27 @@ export default function Accueil() {
           </button>
         )}
       </section>
+
+      {/* Demandes de potes reçues : à accepter direct depuis l'accueil */}
+      {demandes.length > 0 && (
+        <section aria-label="Demandes de potes" style={{ margin: '12px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {demandes.map((d) => (
+            <div key={d.amitieId} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: COL.panneau, border: `2px solid ${COL.or}`, borderRadius: 16, padding: '12px 14px', boxShadow: '0 0 16px rgba(233,196,106,0.18)' }}>
+              <span style={{ fontSize: '1.5rem' }} aria-hidden="true">🤝</span>
+              <span style={{ flex: 1, minWidth: 140, color: COL.creme, fontSize: '0.92rem', lineHeight: 1.35 }}>
+                <strong style={{ color: COL.or }}>{d.pseudo}</strong> veut trinquer avec toi !
+              </span>
+              <button onClick={() => accepterPote(d)} className="pmu-arcade" style={{ minHeight: 44, padding: '0 16px', fontSize: '0.85rem' }}>
+                🍻 Accepter
+              </button>
+              <button onClick={() => refuserPote(d)}
+                style={{ minHeight: 44, padding: '0 12px', borderRadius: 10, border: `2px solid ${COL.bleu1}`, background: 'transparent', color: COL.texte2, fontWeight: 700, fontSize: '0.85rem' }}>
+                Refuser
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* Vedette : Le Pèse-Alco, taux en direct */}
       <section aria-label="Le Pèse-Alco" style={{ margin: '18px 16px 0' }}>
@@ -138,6 +214,45 @@ export default function Accueil() {
         </button>
       </section>
 
+      {/* Un geste = un gag : le tavernier balance une vanne au hasard */}
+      <section aria-label="Une vanne au hasard" style={{ margin: '12px 16px 0' }}>
+        <button onClick={vanneAuHasard} className="pmu-arcade"
+          style={{ width: '100%', minHeight: 64, fontSize: '1.05rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <span style={{ fontSize: '1.4rem' }} aria-hidden="true">🎲</span>
+          Une vanne, patron !
+        </button>
+        {vanne && (
+          <div role="status" style={{ marginTop: 10, background: COL.panneau, border: `1px solid ${COL.or}`, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: '1.3rem' }} aria-hidden="true">🔊</span>
+            <span style={{ fontWeight: 700, fontSize: '0.92rem', lineHeight: 1.35, color: COL.creme }}>« {vanne} »</span>
+          </div>
+        )}
+      </section>
+
+      {/* L'Apéro du jour : le rituel quotidien du comptoir */}
+      <section aria-label="L'Apéro du jour" style={{ margin: '12px 16px 0' }}>
+        <div className="pmu-ardoise" style={{ padding: '16px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: '1.4rem' }} aria-hidden="true">{apero.emoji}</span>
+            <h2 className="craie" style={{ margin: 0, fontFamily: FRAUNCES, fontWeight: 800, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>
+              L&apos;Apéro du jour
+            </h2>
+            <span className="craie-2" style={{ fontSize: '0.7rem', fontWeight: 800 }}>{aperoFait ? '✅ relevé' : `+${XP_APERO} XP`}</span>
+          </div>
+          <p className="craie" style={{ margin: '10px 0 12px', fontSize: '0.95rem', lineHeight: 1.5 }}>{apero.texte}</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button onClick={() => parlerTavernier(apero.texte)}
+              className="pmu-arcade pmu-arcade--ardoise" style={{ minHeight: 46, padding: '0 14px', fontSize: '0.86rem' }}>
+              🔊 Le tavernier l&apos;annonce
+            </button>
+            <button onClick={releverDefi} disabled={aperoFait}
+              className="pmu-arcade pmu-arcade--or" style={{ minHeight: 46, padding: '0 14px', fontSize: '0.86rem', opacity: aperoFait ? 0.55 : 1 }}>
+              {aperoFait ? 'Défi relevé, champion' : '💪 Défi relevé !'}
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Les 4 comptoirs */}
       <nav aria-label="Les comptoirs" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '18px 16px 0' }}>
         <Comptoir bg={COL.rougeNeon} fg="#fff" onClick={() => navigate('/pese-alco')} icon={<IcoJauge c="#fff" />} label="Le Pèse-Alco" />
@@ -145,6 +260,28 @@ export default function Accueil() {
         <Comptoir bg="#14110F" fg={COL.creme} border={COL.or} onClick={() => navigate('/ardoise')} icon={<IcoArdoise c={COL.or} />} label="L’Ardoise des Comptes" />
         <Comptoir bg={COL.ambre} fg="#2A1F10" onClick={() => navigate('/champions')} icon={<IcoTrophee c="#2A1F10" />} label="Le Tableau des Champions" />
       </nav>
+
+      {/* Mes potes — inviter, accepter, retrouver sa bande (accès direct) */}
+      <section style={{ margin: '12px 16px 0' }}>
+        <button onClick={() => navigate('/amis')}
+          style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, background: COL.panneau, border: `2px solid ${COL.bleu1}`, borderRadius: 18, padding: '16px 18px', color: COL.creme }}>
+          <span style={{ fontSize: '1.9rem' }} aria-hidden="true">👥</span>
+          <span style={{ flex: 1 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.05rem', color: COL.or }}>Mes potes</span>
+              {demandes.length > 0 && (
+                <span style={{ background: COL.rougeNeon, color: '#fff', fontSize: '0.66rem', fontWeight: 800, borderRadius: 999, padding: '2px 8px' }}>
+                  {demandes.length} demande{demandes.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </span>
+            <span style={{ display: 'block', fontSize: '0.84rem', color: COL.texte2, marginTop: 2 }}>
+              Envoie ton lien de pote ou fais scanner ton QR : la demande part toute seule.
+            </span>
+          </span>
+          <ChevronDroit color={COL.or} />
+        </button>
+      </section>
 
       {/* L'Analyse — bilan WHOOP parodique */}
       <section style={{ margin: '12px 16px 0' }}>

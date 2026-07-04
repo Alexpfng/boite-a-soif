@@ -17,6 +17,7 @@ import { tchin, bip, vibrer } from '../features/audio/sons';
 import { genererPotes } from '../features/champions/mock';
 import { useAuth } from '../features/auth/AuthContext';
 import { publierMonEtat, lireEtats, abonnerEtats, type EtatSoiree } from '../features/champions/presence';
+import { envoyerTchin } from '../features/champions/tchinDistance';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
@@ -111,7 +112,13 @@ export default function Champions() {
     [etats, user]);
 
   const montrerNudge = (m: string) => { setNudge(m); window.setTimeout(() => setNudge((c) => (c === m ? null : c)), 3000); };
-  const trinquer = (p: string) => { vibrer([60, 40, 60]); tchin(); montrerNudge(`Tchin avec ${p} ! 🍻`); };
+  // Trinque ici ET sur le téléphone du pote (tchin à distance via Realtime).
+  const trinquer = (l: Ligne) => {
+    vibrer([60, 40, 60]);
+    tchin();
+    if (user) envoyerTchin(l.id, user.id, pseudo);
+    montrerNudge(`Tchin avec ${l.pseudo} ! 🍻 (son téléphone a sonné)`);
+  };
   const verreEau = (p: string) => { vibrer(400); bip(); montrerNudge(`Tournée d'eau pour ${p}. Bien vu, le Sam.`); };
 
   const seul = lignesLive.length <= 1;
@@ -167,7 +174,7 @@ export default function Champions() {
                 {lignesLive.filter((l) => !l.estToi).map((l) => (
                   <li key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 16, padding: '12px 14px' }}>
                     <span style={{ flex: 1, minWidth: 110, fontWeight: 800, fontSize: '0.95rem', color: COL.texte, textTransform: 'uppercase' }}>{l.pseudo}</span>
-                    <button className="pmu-arcade" onClick={() => trinquer(l.pseudo)} style={{ minHeight: 48, padding: '0 14px', fontSize: '0.88rem' }}>🍻 Trinquer</button>
+                    <button className="pmu-arcade" onClick={() => trinquer(l)} style={{ minHeight: 48, padding: '0 14px', fontSize: '0.88rem' }}>🍻 Trinquer</button>
                     <button className="pmu-arcade pmu-arcade--ardoise" onClick={() => verreEau(l.pseudo)} style={{ minHeight: 48, padding: '0 14px', fontSize: '0.88rem' }}>💧 Verre d'eau</button>
                   </li>
                 ))}

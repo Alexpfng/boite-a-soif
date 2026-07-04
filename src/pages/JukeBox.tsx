@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppShell } from '../components/layout/AppShell';
 import { COL, FRAUNCES } from '../ui/theme';
 import { PHRASES, type Phrase } from '../features/jukebox/phrases';
-import { parlerTavernier, tchin, capsule, cacahuete, bip, fanfare } from '../features/audio/sons';
+import { parlerTavernier, tchin, capsule, cacahuete, bip, fanfare, vibrer } from '../features/audio/sons';
 import { lirePropositions, ajouterProposition, likerProposition, repliqueDuMois, type Proposition } from '../features/jukebox/propositions';
 import { choisirRetourDeclamation, estIOSCourant } from '../features/jukebox/declamation';
 
@@ -81,9 +81,17 @@ export default function JukeBox() {
     await ajouterProposition(t);
     recharger();
   };
+  // Like OPTIMISTE : l'affichage bouge sous le doigt, le serveur suit.
+  // On ne recharge (et ne re-trie) qu'en cas d'échec, pour resynchroniser.
   const likerRep = async (id: string) => {
-    await likerProposition(id);
-    recharger();
+    vibrer(10);
+    setRepliques((liste) =>
+      liste.map((p) =>
+        p.id === id ? { ...p, dejaLike: !p.dejaLike, likes: Math.max(0, p.likes + (p.dejaLike ? -1 : 1)) } : p,
+      ),
+    );
+    const resultat = await likerProposition(id);
+    if (resultat === null) recharger();
   };
   const topMois = repliqueDuMois(repliques);
 

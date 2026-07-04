@@ -11,6 +11,8 @@ interface AuthCtx {
   // Vrai quand la session est résolue ET, le cas échéant, la synchro cloud
   // initiale terminée (ou échouée, on continue alors en local).
   pret: boolean;
+  /** Vrai pour un compte invité (connexion anonyme, pas encore converti). */
+  estInvite: boolean;
   seDeconnecter: () => Promise<void>;
 }
 
@@ -19,6 +21,7 @@ const Contexte = createContext<AuthCtx>({
   session: null,
   chargement: true,
   pret: false,
+  estInvite: false,
   seDeconnecter: async () => {},
 });
 
@@ -89,8 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const pret = !chargement && (!userId || syncPret);
 
+  const estInvite = session?.user?.is_anonymous === true;
+
   return (
-    <Contexte.Provider value={{ user: session?.user ?? null, session, chargement, pret, seDeconnecter }}>
+    <Contexte.Provider value={{ user: session?.user ?? null, session, chargement, pret, estInvite, seDeconnecter }}>
       {children}
     </Contexte.Provider>
   );

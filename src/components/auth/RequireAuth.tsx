@@ -19,6 +19,8 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/connexion" replace state={{ from: location.pathname }} />;
+  // `search` conservé : les liens profonds avec paramètres (ex. /amis?pote=…)
+  // doivent survivre au détour par la connexion.
+  if (!user) return <Navigate to="/connexion" replace state={{ from: location.pathname + location.search }} />;
   return <>{children}</>;
 }

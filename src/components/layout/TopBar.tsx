@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Wordmark, IconeAccessibilite, IconeRetour } from '../../ui/icons';
-import { COL } from '../../ui/theme';
+import { COL, FRAUNCES } from '../../ui/theme';
+import { lireXP, niveauDepuisXP } from '../../features/cabine/progression';
+import { onChangementStockage } from '../../lib/storage';
 
 interface Props {
   onOpenPanel: () => void;
@@ -10,6 +13,12 @@ export function TopBar({ onOpenPanel }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const notAccueil = location.pathname !== '/app';
+
+  // Niveau de Pilier toujours visible : chaque action de la Cabine nourrit un
+  // statut affiché partout. Suit les écritures du stockage en direct.
+  const [xp, setXp] = useState(() => lireXP());
+  useEffect(() => onChangementStockage(() => setXp(lireXP())), []);
+  const niv = niveauDepuisXP(xp);
 
   return (
     <header
@@ -50,6 +59,20 @@ export function TopBar({ onOpenPanel }: Props) {
           <Wordmark taille="topbar" />
         </button>
         <div style={{ flex: 1 }} />
+        <button
+          onClick={() => navigate('/cabine')}
+          aria-label={`Niveau ${niv.niveau} — ${niv.titre}. Ouvrir la Cabine.`}
+          title={niv.titre}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5, minHeight: 34,
+            border: `1px solid ${COL.or}`, background: 'rgba(233,196,106,0.10)',
+            borderRadius: 999, color: COL.or, padding: '2px 10px 2px 8px',
+            fontFamily: FRAUNCES, fontWeight: 800, fontSize: '0.82rem', whiteSpace: 'nowrap',
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: '1rem' }}>{niv.emoji}</span>
+          Nv {niv.niveau}
+        </button>
         <button
           onClick={onOpenPanel}
           aria-label="Ouvrir les options d'accessibilité"

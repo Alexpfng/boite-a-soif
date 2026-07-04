@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { SkipLink } from '../a11y/SkipLink';
+import { BandeauInvite } from '../auth/BandeauInvite';
 import { TopBar } from './TopBar';
 import { BottomNav } from './BottomNav';
 import { AccessibilityPanel } from '../a11y/AccessibilityPanel';
@@ -31,6 +32,7 @@ export function AppShell({ children, hideChrome }: Props) {
       <SkipLink />
 
       {!hideChrome && <TopBar onOpenPanel={() => setPanelOpen(true)} />}
+      {!hideChrome && <BandeauInvite />}
 
       <main id="contenu-principal" tabIndex={-1} style={{ flex: 1, padding: hideChrome ? 0 : '0 0 130px 0', outline: 'none' }}>
         {children}

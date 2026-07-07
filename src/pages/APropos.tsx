@@ -79,15 +79,20 @@ export default function APropos() {
 
       <Bloc titre="Éditeur">
         <p style={{ margin: 0 }}>
-          Éditeur : <strong style={{ color: COL.creme }}>[à compléter : nom / raison sociale]</strong>
+          Éditeur : <strong style={{ color: COL.creme }}>Alexandre Pfennig</strong>
           <br />
-          Statut : [à compléter — ex. particulier / auto-entrepreneur / société]
+          Statut : particulier (éditeur non professionnel)
           <br />
-          Adresse : [à compléter]
+          Adresse : non publiée. Conformément à la LCEN, un éditeur non professionnel peut ne
+          pas rendre publique son adresse ; son identité est tenue à la disposition de
+          l&apos;hébergeur. Toute demande peut être adressée par email.
           <br />
-          Directeur de la publication : [à compléter]
+          Directeur de la publication : Alexandre Pfennig
           <br />
-          Contact : <strong style={{ color: COL.creme }}>[à compléter : email]</strong>
+          Contact :{" "}
+          <a href="mailto:contact@la-boite-a-soif.fr" style={{ color: COL.or, fontWeight: 700, textDecoration: "underline" }}>
+            contact@la-boite-a-soif.fr
+          </a>
         </p>
       </Bloc>
 
@@ -116,12 +121,19 @@ export default function APropos() {
         </p>
         <p style={{ margin: "0 0 8px" }}>
           <strong style={{ color: COL.creme }}>Conservation :</strong> tant que ton compte est
-          actif. Tu peux tout effacer en supprimant ton compte (contacte l&apos;éditeur).
+          actif. Tu peux tout effacer en supprimant ton compte ou en écrivant à{" "}
+          <a href="mailto:contact@la-boite-a-soif.fr" style={{ color: COL.or, fontWeight: 700, textDecoration: "underline" }}>
+            contact@la-boite-a-soif.fr
+          </a>
+          .
         </p>
         <p style={{ margin: 0 }}>
           <strong style={{ color: COL.creme }}>Tes droits :</strong> accès, rectification,
-          effacement, portabilité et opposition (RGPD). Pour les exercer, écris à l&apos;éditeur
-          à l&apos;adresse ci-dessus. Tu peux aussi saisir la CNIL (cnil.fr).
+          effacement, portabilité et opposition (RGPD). Pour les exercer, écris à{" "}
+          <a href="mailto:contact@la-boite-a-soif.fr" style={{ color: COL.or, fontWeight: 700, textDecoration: "underline" }}>
+            contact@la-boite-a-soif.fr
+          </a>
+          . Tu peux aussi saisir la CNIL (cnil.fr).
         </p>
       </Bloc>
 

@@ -12,6 +12,14 @@ import { useAuth } from '../features/auth/AuthContext';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
+// Presets regroupés par famille, en conservant l'ordre d'apparition.
+const PRESETS_GROUPES = PRESETS.reduce<{ categorie: string; items: typeof PRESETS }[]>((acc, p) => {
+  let g = acc.find((x) => x.categorie === p.categorie);
+  if (!g) { g = { categorie: p.categorie, items: [] }; acc.push(g); }
+  g.items.push(p);
+  return acc;
+}, []);
+
 const SEXES: { cle: Sexe; label: string }[] = [
   { cle: 'homme', label: 'Homme' },
   { cle: 'femme', label: 'Femme' },
@@ -155,29 +163,39 @@ export default function PeseAlco() {
 
       {/* ── Logger : les classiques du comptoir ── */}
       <section style={{ margin: '22px 16px 0' }}>
-        <h2 className="pmu-titre" style={{ margin: '0 0 12px 2px', fontSize: '1.25rem' }}>
+        <h2 className="pmu-titre" style={{ margin: '0 0 6px 2px', fontSize: '1.25rem' }}>
           Ajoute ta tournée
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          {PRESETS.map((p) => (
-            <button
-              key={p.type}
-              onClick={() => { ajouter(p); capsule(); }}
-              data-card="true"
-              style={{
-                minHeight: 104, border: `2px solid ${COL.bleu1}`, background: COL.panneau, borderRadius: 20,
-                padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between',
-                color: COL.texte, textAlign: 'left',
-              }}
-            >
-              <span style={{ fontSize: '2rem', lineHeight: 1 }} aria-hidden="true">{p.emoji}</span>
-              <span>
-                <span style={{ display: 'block', fontWeight: 700, fontSize: '1rem' }}>{p.label}</span>
-                <span style={{ display: 'block', fontSize: '0.8rem', color: COL.texte2 }}>{p.volumeCl} cl · {p.degre}°</span>
-              </span>
-            </button>
-          ))}
-        </div>
+        <p style={{ margin: '0 0 14px 2px', fontSize: '0.82rem', color: COL.texte2 }}>
+          Doses de bar habituelles. Le taux dépend de ton profil (poids, sexe) réglé plus bas.
+        </p>
+        {PRESETS_GROUPES.map((groupe) => (
+          <div key={groupe.categorie} style={{ marginBottom: 16 }}>
+            <h3 style={{ margin: '0 0 8px 2px', fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: COL.or }}>
+              {groupe.categorie}
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {groupe.items.map((p) => (
+                <button
+                  key={p.type}
+                  onClick={() => { ajouter(p); capsule(); }}
+                  data-card="true"
+                  style={{
+                    minHeight: 104, border: `2px solid ${COL.bleu1}`, background: COL.panneau, borderRadius: 20,
+                    padding: '12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between',
+                    color: COL.texte, textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: '2rem', lineHeight: 1 }} aria-hidden="true">{p.emoji}</span>
+                  <span>
+                    <span style={{ display: 'block', fontWeight: 700, fontSize: '1rem' }}>{p.label}</span>
+                    <span style={{ display: 'block', fontSize: '0.8rem', color: COL.texte2 }}>{p.volumeCl} cl · {p.degre}°</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.9rem', color: COL.texte2, flex: 1, minWidth: 160 }}>

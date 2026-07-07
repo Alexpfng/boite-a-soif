@@ -45,6 +45,7 @@ export interface PresetBoisson {
   emoji: string;
   volumeCl: number;
   degre: number; // % vol
+  categorie: string; // famille (pour regrouper à l'affichage)
 }
 
 /** Grammes d'alcool pur = volume(mL) × (degré/100) × densité éthanol. */
@@ -52,12 +53,40 @@ export function grammesAlcool(volumeCl: number, degre: number): number {
   return Math.round(volumeCl * 10 * (degre / 100) * DENSITE_ETHANOL * 10) / 10;
 }
 
-// Les classiques du comptoir.
+// Les classiques du comptoir, par famille. Volumes = doses de bar habituelles
+// (le degré est ramené au titrage réel de la boisson), pour une estimation
+// cohérente avec la réalité : un verre standard ≈ 10 g d'alcool ≈ 0,20 g/L.
 export const PRESETS: PresetBoisson[] = [
-  { type: 'demi', label: 'Demi', emoji: '🍺', volumeCl: 25, degre: 5 },
-  { type: 'pinte', label: 'Pinte', emoji: '🍻', volumeCl: 50, degre: 5 },
-  { type: 'rouge', label: 'Ballon de rouge', emoji: '🍷', volumeCl: 12, degre: 12.5 },
-  { type: 'shot', label: 'Shot', emoji: '🥃', volumeCl: 3, degre: 40 },
+  // Bières & cidres
+  { type: 'demi', label: 'Demi', emoji: '🍺', volumeCl: 25, degre: 5, categorie: 'Bières & cidres' },
+  { type: 'pinte', label: 'Pinte', emoji: '🍻', volumeCl: 50, degre: 5, categorie: 'Bières & cidres' },
+  { type: 'biere-forte', label: 'Bière forte / IPA', emoji: '🍺', volumeCl: 33, degre: 8, categorie: 'Bières & cidres' },
+  { type: 'cidre', label: 'Cidre', emoji: '🍎', volumeCl: 25, degre: 4.5, categorie: 'Bières & cidres' },
+
+  // Vins & bulles
+  { type: 'rouge', label: 'Ballon de rouge', emoji: '🍷', volumeCl: 12, degre: 12.5, categorie: 'Vins & bulles' },
+  { type: 'blanc', label: 'Verre de blanc', emoji: '🥂', volumeCl: 12, degre: 12, categorie: 'Vins & bulles' },
+  { type: 'rose', label: 'Verre de rosé', emoji: '🌸', volumeCl: 12, degre: 12, categorie: 'Vins & bulles' },
+  { type: 'champagne', label: 'Coupe de champagne', emoji: '🍾', volumeCl: 10, degre: 12, categorie: 'Vins & bulles' },
+
+  // Apéritifs
+  { type: 'pastis', label: 'Pastis (Ricard)', emoji: '🟡', volumeCl: 2.5, degre: 45, categorie: 'Apéritifs' },
+  { type: 'spritz', label: 'Spritz', emoji: '🍹', volumeCl: 12, degre: 11, categorie: 'Apéritifs' },
+  { type: 'kir', label: 'Kir', emoji: '🍸', volumeCl: 10, degre: 12, categorie: 'Apéritifs' },
+  { type: 'porto', label: 'Porto / Martini', emoji: '🍷', volumeCl: 8, degre: 17, categorie: 'Apéritifs' },
+
+  // Spiritueux & shots
+  { type: 'shot', label: 'Shot vodka', emoji: '🥃', volumeCl: 3, degre: 40, categorie: 'Spiritueux & shots' },
+  { type: 'whisky', label: 'Whisky', emoji: '🥃', volumeCl: 4, degre: 40, categorie: 'Spiritueux & shots' },
+  { type: 'rhum', label: 'Rhum', emoji: '🥃', volumeCl: 4, degre: 40, categorie: 'Spiritueux & shots' },
+  { type: 'tequila', label: 'Tequila', emoji: '🌵', volumeCl: 3, degre: 40, categorie: 'Spiritueux & shots' },
+  { type: 'gin', label: 'Gin', emoji: '🍸', volumeCl: 4, degre: 40, categorie: 'Spiritueux & shots' },
+  { type: 'digestif', label: 'Get / digestif', emoji: '🌿', volumeCl: 3, degre: 25, categorie: 'Spiritueux & shots' },
+
+  // Cocktails
+  { type: 'mojito', label: 'Mojito', emoji: '🍹', volumeCl: 5, degre: 40, categorie: 'Cocktails' },
+  { type: 'gin-tonic', label: 'Gin tonic', emoji: '🍸', volumeCl: 4, degre: 40, categorie: 'Cocktails' },
+  { type: 'punch', label: 'Punch', emoji: '🍹', volumeCl: 10, degre: 18, categorie: 'Cocktails' },
 ];
 
 /**

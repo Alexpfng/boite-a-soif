@@ -19,6 +19,7 @@ const Analyse          = lazy(() => import('./pages/Analyse'));
 const Cabine           = lazy(() => import('./pages/Cabine'));
 const Bientot          = lazy(() => import('./pages/Bientot'));
 const APropos          = lazy(() => import('./pages/APropos'));
+const Prevention       = lazy(() => import('./pages/Prevention'));
 const NotFound         = lazy(() => import('./pages/NotFound'));
 
 function Chargement() {
@@ -39,9 +40,12 @@ function P({ children }: { children: React.ReactNode }) {
 }
 
 const routes: RouteObject[] = [
-  // Public : site vitrine + connexion
+  // Public : site vitrine + connexion + pages légales/prévention (accessibles
+  // sans compte, comme l'exige la nature d'informations légales).
   { path: '/',                      element: <S><Landing /></S> },
   { path: '/connexion',             element: <S><Connexion /></S> },
+  { path: '/a-propos',              element: <S><APropos /></S> },
+  { path: '/prevention',            element: <S><Prevention /></S> },
 
   // Application (accès direct, sans connexion)
   { path: '/app',                   element: <P><Accueil /></P> },
@@ -57,7 +61,6 @@ const routes: RouteObject[] = [
   { path: '/analyse',               element: <P><Analyse /></P> },
   { path: '/cabine',                element: <P><Cabine /></P> },
   { path: '/bientot',               element: <P><Bientot /></P> },
-  { path: '/a-propos',              element: <P><APropos /></P> },
 
   { path: '*',                      element: <S><NotFound /></S> },
 ];

@@ -16,7 +16,9 @@
 // synchronisées.
 
 const PREFIXE = 'aphasaide:';
-const CLES_GLOBALES = new Set(['a11y', 'install-fermee']);
+// Clés « globales » : par appareil, hors espace de compte, non synchronisées
+// (préférence a11y, bannière d'install, confirmation de majorité 18+).
+const CLES_GLOBALES = new Set(['a11y', 'install-fermee', 'majorite-confirmee']);
 
 // Clés de données personnelles (synchronisées et importées au premier login).
 export const CLES_PERSONNELLES = [

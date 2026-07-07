@@ -16,6 +16,13 @@ export function PortailMajorite() {
 
   if (confirme) return null;
 
+  // Pages d'information publiques : prévention et mentions légales restent
+  // accessibles SANS passer le portail (un mineur doit pouvoir joindre l'aide ;
+  // des mentions légales doivent être consultables par tous). `endsWith` gère
+  // aussi bien la racine qu'un éventuel sous-chemin de déploiement.
+  const chemin = typeof window !== "undefined" ? window.location.pathname : "";
+  if (chemin.endsWith("/prevention") || chemin.endsWith("/a-propos")) return null;
+
   const entrer = () => {
     ecrireStockage(CLE, true);
     setConfirme(true);
@@ -110,6 +117,14 @@ export function PortailMajorite() {
             <p style={{ margin: "12px 0 0", fontSize: "0.78rem", color: COL.texte2 }}>
               Anonyme et non surtaxé, 7j/7 de 8h à 2h.
             </p>
+            {/* Rechargement volontaire (pas de navigation SPA) : la page
+                /prevention est exemptée du portail, elle s'affichera bien. */}
+            <a
+              href={`${import.meta.env.BASE_URL}prevention`}
+              style={{ display: "inline-block", marginTop: 16, color: COL.creme, fontWeight: 700, fontSize: "0.9rem", textDecoration: "underline" }}
+            >
+              Voir toutes les ressources d&apos;aide →
+            </a>
           </>
         )}
 

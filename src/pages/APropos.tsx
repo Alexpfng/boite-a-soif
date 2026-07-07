@@ -101,6 +101,10 @@ export default function APropos() {
           Site hébergé par <strong style={{ color: COL.creme }}>GitHub Pages</strong> — GitHub,
           Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.
           <br />
+          Nom de domaine <strong style={{ color: COL.creme }}>la-boite-a-soif.fr</strong> enregistré
+          et géré via <strong style={{ color: COL.creme }}>IONOS SARL</strong> (7 place de la Gare,
+          57200 Sarreguemines, France).
+          <br />
           Comptes, base de données et synchronisation : <strong style={{ color: COL.creme }}>Supabase</strong> (Supabase, Inc.).
         </p>
       </Bloc>

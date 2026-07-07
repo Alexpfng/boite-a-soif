@@ -419,11 +419,13 @@ const LANDING_HTML = `
       <nav aria-label="Liens de pied de page" style="display:flex; flex-direction:column; gap:10px; font-size:.94rem;">
         <a href="#decouvrir">Ce qu&rsquo;il y a dans la boîte</a>
         <a href="${import.meta.env.BASE_URL}app">Ouvrir la boîte</a>
+        <a href="${import.meta.env.BASE_URL}prevention">Prévention &amp; aide</a>
+        <a href="${import.meta.env.BASE_URL}a-propos">Mentions légales</a>
       </nav>
     </div>
     <p class="avert">
-      La Boît&rsquo;à Soif est faite pour s&rsquo;amuser entre amis. L&rsquo;abus d&rsquo;alcool est dangereux pour la santé :
-      à consommer avec modération. Et on ne prend pas le volant après l&rsquo;apéro.
+      Réservé aux 18 ans et plus. L&rsquo;abus d&rsquo;alcool est dangereux pour la santé, à consommer avec modération.
+      Et on ne prend jamais le volant après l&rsquo;apéro. Besoin d&rsquo;aide ? Alcool Info Service : 0 980 980 930 (anonyme, non surtaxé).
     </p>
     <p class="credits">La Boît&rsquo;à Soif — l&rsquo;appli des piliers de bar.</p>
   </div>

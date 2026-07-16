@@ -25,17 +25,19 @@ import { Riviere } from './cabine/Riviere';
 import { NiveauPilier } from './cabine/NiveauPilier';
 import { TuPreferes } from './cabine/TuPreferes';
 import { Petanque } from './cabine/Petanque';
+import { JeuDesRefs } from './cabine/JeuDesRefs';
 import { lireXP, ajouterXP, niveauDepuisXP, XP_PAR_NIVEAU } from '../features/cabine/progression';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
 type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes'
   | 'toasts' | 'motdujour' | 'surnom' | 'traducteur' | 'mytho' | 'beauferie' | 'quipaie' | 'selfie' | 'citations'
-  | 'niveau' | 'reflexes' | 'quiz' | 'boussole' | 'riviere' | 'niveaupilier' | 'tupreferes' | 'petanque';
+  | 'niveau' | 'reflexes' | 'quiz' | 'boussole' | 'riviere' | 'niveaupilier' | 'tupreferes' | 'petanque' | 'refs';
 
 interface TuileDef { vue: Vue; emoji: string; titre: string; desc: string; bg: string; fg: string }
 const CATEGORIES: { titre: string; emoji: string; jeux: TuileDef[] }[] = [
   { titre: 'Jeux', emoji: '🎮', jeux: [
+    { vue: 'refs', emoji: '🎬', titre: 'Le Jeu des Réfs', desc: 'On lance le début d’une réplique culte, vous la finissez !', bg: '#14110F', fg: COL.creme },
     { vue: 'riviere', emoji: '🃏', titre: 'La Rivière', desc: 'Plus/moins à l’aller, rouge ou noir au retour. Tu te plantes, tu bois.', bg: COL.rougeNeon, fg: '#fff' },
     { vue: 'quiz', emoji: '🧠', titre: 'Quiz Culture G de Bar', desc: '10 questions de comptoir. T’es calé ou pas ?', bg: COL.or, fg: '#2A1F10' },
     { vue: 'beauferie', emoji: '🎽', titre: 'Le Niveau de Beauferie', desc: 'T’es plutôt hipster ou roi du barbeuc ?', bg: COL.ambre, fg: '#2A1F10' },
@@ -190,6 +192,7 @@ export default function Cabine() {
       {vue === 'niveaupilier' && <NiveauPilier onRetour={() => setVue('menu')} />}
       {vue === 'tupreferes' && <TuPreferes onRetour={() => setVue('menu')} />}
       {vue === 'petanque' && <Petanque onRetour={() => setVue('menu')} />}
+      {vue === 'refs' && <JeuDesRefs onRetour={() => setVue('menu')} />}
     </AppShell>
   );
 }

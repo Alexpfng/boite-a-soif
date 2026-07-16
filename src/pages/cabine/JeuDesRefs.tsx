@@ -56,7 +56,7 @@ export function JeuDesRefs({ onRetour }: { onRetour: () => void }) {
     });
   };
 
-  const chip = (f: Filtre, texte: string): React.CSSProperties => ({
+  const chip = (f: Filtre): React.CSSProperties => ({
     flex: 1, minHeight: 40, borderRadius: 999, fontWeight: 800, fontSize: "0.82rem", cursor: "pointer",
     border: `2px solid ${filtre === f ? COL.or : COL.bleu1}`,
     background: filtre === f ? "rgba(233,196,106,0.16)" : "transparent",
@@ -72,9 +72,9 @@ export function JeuDesRefs({ onRetour }: { onRetour: () => void }) {
         </p>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          <button onClick={() => changerFiltre("tout")} style={chip("tout", "Tout")}>Tout</button>
-          <button onClick={() => changerFiltre("film")} style={chip("film", "Films")}>🎬 Films</button>
-          <button onClick={() => changerFiltre("net")} style={chip("net", "Internet")}>📱 Internet</button>
+          <button onClick={() => changerFiltre("tout")} style={chip("tout")}>Tout</button>
+          <button onClick={() => changerFiltre("film")} style={chip("film")}>🎬 Films</button>
+          <button onClick={() => changerFiltre("net")} style={chip("net")}>📱 Internet</button>
         </div>
 
         <div style={{ background: "#14110F", border: `2px solid ${COL.or}`, borderRadius: 20, padding: "22px 20px", boxShadow: "0 6px 0 rgba(0,0,0,0.4)" }}>

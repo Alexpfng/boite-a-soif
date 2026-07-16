@@ -113,6 +113,26 @@ export function fanfare() {
   [523, 659, 784, 1047].forEach((f, i) => note(f, t + i * 0.1, 0.18, 'square', 0.13));
 }
 
+/** Choc métallique de deux boules de pétanque (« clac »). `force` 0..1 module le volume/pitch. */
+export function choc(force = 1) {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const f = Math.min(1, Math.max(0.15, force));
+  note(1900 + f * 1100, t, 0.07, 'square', 0.04 + f * 0.09);
+  note(3100 + f * 1400, t + 0.004, 0.05, 'sine', 0.03 + f * 0.05);
+  bruit(t, 0.045, 0.05 * f, 2600);
+}
+
+/** Petit « toc » sourd au lancer d'une boule. */
+export function lancerBoule() {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  note(190, t, 0.09, 'sine', 0.16);
+  bruit(t, 0.035, 0.09, 350);
+}
+
 /** Sonnerie de téléphone (« dring dring »), répétée. Retourne une fonction d'arrêt. */
 export function sonnerie(): () => void {
   const ac = audio();

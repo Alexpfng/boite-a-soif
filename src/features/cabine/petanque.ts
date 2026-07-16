@@ -27,9 +27,20 @@ const ARRET = 0.045; // seuil sous lequel un corps s'arrête
 const AMORTI_MUR = 0.5; // perte de vitesse au rebond sur un bord
 const RESTITUTION = 0.85; // élasticité des chocs entre boules
 
-/** Avance la simulation d'un pas. Renvoie true tant qu'au moins un corps bouge. */
-export function pasSimulation(corps: Corps[]): boolean {
+export interface Choc {
+  x: number;
+  y: number;
+  force: number;
+}
+export interface PasResultat {
+  bouge: boolean;
+  chocs: Choc[];
+}
+
+/** Avance la simulation d'un pas. Renvoie s'il reste du mouvement + les chocs de ce pas. */
+export function pasSimulation(corps: Corps[]): PasResultat {
   let bouge = false;
+  const chocs: Choc[] = [];
 
   // Intégration + frottement + murs.
   for (const c of corps) {
@@ -74,11 +85,12 @@ export function pasSimulation(corps: Corps[]): boolean {
         b.vx += imp * nx;
         b.vy += imp * ny;
         bouge = true;
+        chocs.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, force: Math.min(1, Math.abs(vn) / V_MAX) });
       }
     }
   }
 
-  return bouge;
+  return { bouge, chocs };
 }
 
 export function distance(a: { x: number; y: number }, b: { x: number; y: number }): number {

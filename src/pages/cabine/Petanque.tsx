@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Entete } from "./Cadre";
 import { COL, FRAUNCES } from "../../ui/theme";
-import { vibrer, choc as sonChoc, lancerBoule as sonLancer, parlerTavernier } from "../../features/audio/sons";
+import { vibrer, choc as sonChoc, lancerBoule as sonLancer, fanfare } from "../../features/audio/sons";
 import {
   pasSimulation, scorerMene, prochainLanceur, distance,
   TERRAIN, R_BOULE, R_COCHONNET, LANCEUR, V_MAX,
@@ -142,9 +142,12 @@ export function Petanque({ onRetour }: { onRetour: () => void }) {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     boucle();
   }
+  // Callout visuel seulement : cette fonction est appelée depuis la boucle
+  // d'animation (pas un geste utilisateur), donc PAS de TTS ici — iOS ne
+  // laisse parler `speak()` que dans un geste, la bannière suffit (les
+  // bruitages, eux, sont du Web Audio et passent sans geste).
   function annoncer(msg: string) {
     setAnnonce(msg);
-    parlerTavernier(msg, 0.5, 1);
     if (annonceTimer.current) window.clearTimeout(annonceTimer.current);
     annonceTimer.current = window.setTimeout(() => setAnnonce(""), 1700);
   }
@@ -206,7 +209,7 @@ export function Petanque({ onRetour }: { onRetour: () => void }) {
       const perdantFanny = g.scores.findIndex((s, i) => i !== meneur && s === 0);
       g.fanny = perdantFanny >= 0 ? g.joueurs[perdantFanny].nom : null;
       setPhase("fin");
-      setTimeout(() => parlerTavernier(g.fanny ? `Fanny pour ${g.fanny} !` : `Victoire de ${g.joueurs[meneur].nom} !`, 0.5, 0.95), 250);
+      fanfare(); // Web Audio : marche sans geste utilisateur, iOS compris.
     }
     rerender();
   }

@@ -78,20 +78,19 @@ export function JeuDesRefs({ onRetour }: { onRetour: () => void }) {
         </div>
 
         <div style={{ background: "#14110F", border: `2px solid ${COL.or}`, borderRadius: 20, padding: "22px 20px", boxShadow: "0 6px 0 rgba(0,0,0,0.4)" }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: COL.texte2 }}>
-            Réf n° {num} · {LABEL[ref.cat].emoji} {LABEL[ref.cat].titre}
+          <div style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: COL.texte2, marginBottom: 8 }}>
+            Réf n° {num}
           </div>
-          <p style={{ margin: "10px 0 0", fontFamily: FRAUNCES, fontWeight: 700, fontSize: "1.7rem", lineHeight: 1.25, color: COL.creme }}>
+          {/* Indice : la source est TOUJOURS affichée pour que ce soit jouable. */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(233,196,106,0.14)", border: `1px solid ${COL.or}`, borderRadius: 999, padding: "6px 14px", marginBottom: 14 }}>
+            <span aria-hidden="true">{LABEL[ref.cat].emoji}</span>
+            <span style={{ color: COL.or, fontWeight: 800, fontSize: "0.92rem" }}>{ref.film}</span>
+          </div>
+          <p style={{ margin: 0, fontFamily: FRAUNCES, fontWeight: 700, fontSize: "1.8rem", lineHeight: 1.25, color: COL.creme }}>
             « {ref.debut}
-            {!revele && <span style={{ color: COL.or }}> … ? »</span>}
+            {!revele && <span style={{ color: COL.texte2 }}> … ? »</span>}
             {revele && <span style={{ color: COL.or }}> {ref.fin} »</span>}
           </p>
-          {revele && (
-            <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 10, background: "rgba(233,196,106,0.12)", border: `1px solid ${COL.or}`, borderRadius: 12, padding: "10px 14px" }}>
-              <span style={{ fontSize: "1.4rem" }} aria-hidden="true">{LABEL[ref.cat].emoji}</span>
-              <span style={{ color: COL.creme, fontWeight: 800, fontSize: "0.95rem" }}>{ref.film}</span>
-            </div>
-          )}
         </div>
 
         <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>

@@ -483,7 +483,7 @@ export function TuPreferes({ onRetour }: { onRetour: () => void }) {
           {/* Axes */}
           <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
             {analyse.axes.map((ax) => {
-              const pct = Math.round(((ax.net + 4) / 8) * 100); // -4..4 → 0..100 (0% = droite, 100% = gauche)
+              const pct = Math.round(((4 - ax.net) / 8) * 100); // net +4 (pôle gauche) → 0% (à gauche) ; net −4 (droite) → 100%
               return (
                 <div key={ax.cle} style={{ background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 14, padding: "12px 14px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: 800, marginBottom: 6 }}>

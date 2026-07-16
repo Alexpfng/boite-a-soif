@@ -24,13 +24,14 @@ import { BoussoleBars } from './cabine/BoussoleBars';
 import { Riviere } from './cabine/Riviere';
 import { NiveauPilier } from './cabine/NiveauPilier';
 import { TuPreferes } from './cabine/TuPreferes';
+import { Petanque } from './cabine/Petanque';
 import { lireXP, ajouterXP, niveauDepuisXP, XP_PAR_NIVEAU } from '../features/cabine/progression';
 
 const fmtBac = (g: number) => g.toFixed(2).replace('.', ',');
 
 type Vue = 'menu' | 'souffle' | 'equilibre' | 'patron' | 'horoscope' | 'derniere' | 'bellemere' | 'pisse' | 'legendes'
   | 'toasts' | 'motdujour' | 'surnom' | 'traducteur' | 'mytho' | 'beauferie' | 'quipaie' | 'selfie' | 'citations'
-  | 'niveau' | 'reflexes' | 'quiz' | 'boussole' | 'riviere' | 'niveaupilier' | 'tupreferes';
+  | 'niveau' | 'reflexes' | 'quiz' | 'boussole' | 'riviere' | 'niveaupilier' | 'tupreferes' | 'petanque';
 
 interface TuileDef { vue: Vue; emoji: string; titre: string; desc: string; bg: string; fg: string }
 const CATEGORIES: { titre: string; emoji: string; jeux: TuileDef[] }[] = [
@@ -120,6 +121,22 @@ export default function Cabine() {
             </button>
           </div>
 
+          {/* Vedette : la Pétanque au glissé */}
+          <div style={{ margin: '12px 16px 0' }}>
+            <button onClick={() => ouvrir('petanque')} style={{
+              width: '100%', textAlign: 'left', border: 'none', borderRadius: 20, padding: '20px 20px',
+              background: 'linear-gradient(135deg, #6E8B4E, #B39A6B)', color: '#fff',
+              boxShadow: '0 6px 0 rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', gap: 16,
+            }}>
+              <span style={{ fontSize: '3rem', lineHeight: 1 }} aria-hidden="true">🎯</span>
+              <span style={{ flex: 1 }}>
+                <span style={{ display: 'inline-block', background: 'rgba(0,0,0,0.25)', borderRadius: 999, padding: '3px 10px', fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>À plusieurs · pointe & tire</span>
+                <span style={{ display: 'block', fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.6rem', textTransform: 'uppercase', lineHeight: 1.05 }}>La Pétanque</span>
+                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.95, marginTop: 4, lineHeight: 1.4 }}>Glisse pour lancer : plus c’est fort, plus ça part loin. Chacun son tour.</span>
+              </span>
+            </button>
+          </div>
+
           {CATEGORIES.map((cat) => (
             <section key={cat.titre} style={{ margin: '22px 16px 0' }}>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: FRAUNCES, fontWeight: 700, fontSize: '1.15rem', color: COL.or, margin: '0 2px 10px' }}>
@@ -172,6 +189,7 @@ export default function Cabine() {
       {vue === 'riviere' && <Riviere onRetour={() => setVue('menu')} />}
       {vue === 'niveaupilier' && <NiveauPilier onRetour={() => setVue('menu')} />}
       {vue === 'tupreferes' && <TuPreferes onRetour={() => setVue('menu')} />}
+      {vue === 'petanque' && <Petanque onRetour={() => setVue('menu')} />}
     </AppShell>
   );
 }

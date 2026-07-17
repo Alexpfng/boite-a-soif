@@ -5,6 +5,7 @@ import { vibrer } from "../../features/audio/sons";
 import { useAuth } from "../../features/auth/AuthContext";
 import { DILEMMES, CATEGORIES_TP, GAGES, type Dilemme } from "../../features/cabine/tuPreferes";
 import { ouvrirSalleTP, genererCodeTP, type SalleTP, type DilemmeDistant } from "../../features/cabine/tuPreferesSalle";
+import { TEST, analyser } from "../../features/cabine/tuPreferesAnalyse";
 
 // « Tu préfères ? » — deux façons de jouer :
 //  • Sur un seul téléphone : mode libre (on discute) ou challenge (tour de rôle + gages).
@@ -30,7 +31,7 @@ export function TuPreferes({ onRetour }: { onRetour: () => void }) {
   const monId = user?.id || "anon";
   const pseudo = ((user?.user_metadata?.pseudo as string) || "").trim() || "Pilier";
 
-  const [phase, setPhase] = useState<"reglages" | "jeu" | "salle">("reglages");
+  const [phase, setPhase] = useState<"reglages" | "jeu" | "salle" | "test" | "resultats">("reglages");
 
   // Réglages
   const [joueurs, setJoueurs] = useState<string[]>([]);
@@ -56,6 +57,12 @@ export function TuPreferes({ onRetour }: { onRetour: () => void }) {
   const salleRef = useRef<SalleTP | null>(null);
   const hoteRef = useRef<{ pool: Dilemme[]; pos: number; round: number } | null>(null);
   const estHoteRef = useRef(false);
+
+  // Test de personnalité
+  const [repTest, setRepTest] = useState<("a" | "b")[][]>([]); // [joueur][question]
+  const [testDil, setTestDil] = useState(0);
+  const [testJoueur, setTestJoueur] = useState(0);
+  const [resultJoueur, setResultJoueur] = useState(0);
 
   // ── Réglages : joueurs & thèmes ──
   const ajouterJoueur = () => {
@@ -100,6 +107,28 @@ export function TuPreferes({ onRetour }: { onRetour: () => void }) {
   };
   const choisir = (c: "a" | "b") => { vibrer(12); setChoix(c); };
   const tirerGage = () => { vibrer([40, 30, 40]); setGage(GAGES[Math.floor(Math.random() * GAGES.length)]); };
+
+  // ── Test de personnalité ──
+  const demarrerTest = () => {
+    if (joueurs.length < 1) return;
+    setRepTest(joueurs.map(() => []));
+    setTestDil(0);
+    setTestJoueur(0);
+    setResultJoueur(0);
+    setPhase("test");
+  };
+  const repondreTest = (c: "a" | "b") => {
+    vibrer(12);
+    setRepTest((prev) => prev.map((arr, i) => (i === testJoueur ? [...arr, c] : arr)));
+    if (testJoueur < joueurs.length - 1) {
+      setTestJoueur(testJoueur + 1);
+    } else {
+      setTestJoueur(0);
+      const nd = testDil + 1;
+      if (nd >= TEST.length) { setResultJoueur(0); setPhase("resultats"); }
+      else setTestDil(nd);
+    }
+  };
 
   // ── Partie à distance ──
   const payloadCourant = (): DilemmeDistant | null => {
@@ -269,6 +298,21 @@ export function TuPreferes({ onRetour }: { onRetour: () => void }) {
             🎲 Jouer sur ce téléphone
           </button>
           {cats.size === 0 && <p style={{ margin: "8px 0 0", textAlign: "center", fontSize: "0.8rem", color: COL.texte2 }}>Coche au moins un thème.</p>}
+
+          {/* Le test de personnalité */}
+          <div style={{ marginTop: 14, background: COL.panneau, border: `2px solid ${COL.bleu1}`, borderRadius: 16, padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "1.6rem" }} aria-hidden="true">🔮</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: "1.05rem", color: COL.or }}>Le test de personnalité</div>
+                <div style={{ fontSize: "0.82rem", color: COL.texte2, lineHeight: 1.4 }}>Chaque joueur répond, on dresse son vrai profil sur 4 axes.</div>
+              </div>
+            </div>
+            <button onClick={demarrerTest} disabled={joueurs.length < 1} className="pmu-arcade pmu-arcade--ardoise" style={{ width: "100%", marginTop: 12, minHeight: 52, fontSize: "0.98rem", opacity: joueurs.length < 1 ? 0.5 : 1 }}>
+              🔮 Lancer le test ({joueurs.length} joueur{joueurs.length > 1 ? "s" : ""})
+            </button>
+            {joueurs.length < 1 && <p style={{ margin: "8px 0 0", textAlign: "center", fontSize: "0.78rem", color: COL.texte2 }}>Ajoute au moins un joueur ci-dessus.</p>}
+          </div>
           <div style={{ height: 16 }} />
         </section>
       </>
@@ -371,6 +415,98 @@ export function TuPreferes({ onRetour }: { onRetour: () => void }) {
           <button onClick={quitterSalle} style={{ width: "100%", marginTop: 18, minHeight: 48, background: "transparent", border: `2px solid ${COL.bleu1}`, borderRadius: 12, color: COL.texte2, fontWeight: 700, fontSize: "0.9rem" }}>
             Quitter la partie
           </button>
+          <div style={{ height: 18 }} />
+        </section>
+      </>
+    );
+  }
+
+  // ══ Écran TEST (questionnaire) ══
+  if (phase === "test") {
+    const dil = TEST[testDil];
+    const joueurNom = joueurs[testJoueur] || "Joueur";
+    const bouton = (cle: "a" | "b", texte: string, bg: string, fg: string) => (
+      <button onClick={() => repondreTest(cle)}
+        style={{ width: "100%", border: "none", borderRadius: 18, background: bg, color: fg, padding: "20px 18px", minHeight: 110, display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontFamily: FRAUNCES, fontWeight: 700, fontSize: "1.1rem", lineHeight: 1.3, boxShadow: "0 5px 0 rgba(0,0,0,0.4)" }}>
+        <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", background: "rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>{cle === "a" ? "🅐" : "🅑"}</span>
+        <span style={{ flex: 1 }}>{texte}</span>
+      </button>
+    );
+    return (
+      <>
+        <Entete titre="Tu préfères ? · le test" onRetour={() => setPhase("reglages")} />
+        <section style={{ margin: "12px 16px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: "0.74rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: COL.texte2 }}>Question {testDil + 1}/{TEST.length}</span>
+            <span style={{ flex: 1, height: 6, background: "rgba(243,232,207,0.12)", borderRadius: 999, overflow: "hidden" }}>
+              <span style={{ display: "block", height: "100%", width: `${(testDil / TEST.length) * 100}%`, background: COL.or }} />
+            </span>
+          </div>
+          <div style={{ background: "rgba(233,196,106,0.12)", border: `2px solid ${COL.or}`, borderRadius: 14, padding: "10px 14px", marginBottom: 14, textAlign: "center" }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: COL.texte2 }}>À toi de répondre (honnêtement !)</span>
+            <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: "1.4rem", color: COL.or }}>🔮 {joueurNom}</div>
+          </div>
+          <div style={{ textAlign: "center", fontFamily: FRAUNCES, fontWeight: 700, fontSize: "1.3rem", color: COL.creme, margin: "0 0 14px" }}>Tu préfères…</div>
+          {bouton("a", dil.a, COL.rougeNeon, "#fff")}
+          <div style={{ textAlign: "center", fontFamily: FRAUNCES, fontWeight: 800, color: COL.or, fontSize: "1.1rem", margin: "10px 0" }}>— OU —</div>
+          {bouton("b", dil.b, COL.or, "#2A1F10")}
+          <div style={{ height: 18 }} />
+        </section>
+      </>
+    );
+  }
+
+  // ══ Écran RÉSULTATS (analyse par joueur) ══
+  if (phase === "resultats") {
+    const analyse = analyser(repTest[resultJoueur] || []);
+    return (
+      <>
+        <Entete titre="Tu préfères ? · profils" onRetour={() => setPhase("reglages")} />
+        <section style={{ margin: "12px 16px 0" }}>
+          {/* Sélecteur de joueur */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+            {joueurs.map((j, i) => (
+              <button key={i} onClick={() => setResultJoueur(i)}
+                style={{ padding: "7px 13px", borderRadius: 999, fontWeight: 800, fontSize: "0.82rem", cursor: "pointer", border: `2px solid ${i === resultJoueur ? COL.or : COL.bleu1}`, background: i === resultJoueur ? "rgba(233,196,106,0.16)" : "transparent", color: i === resultJoueur ? COL.or : COL.texte2 }}>
+                {j}
+              </button>
+            ))}
+          </div>
+
+          {/* Profil */}
+          <div style={{ background: "#14110F", border: `2px solid ${COL.or}`, borderRadius: 20, padding: "20px 18px", boxShadow: "0 6px 0 rgba(0,0,0,0.4)" }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: COL.texte2 }}>Profil de {joueurs[resultJoueur]}</div>
+            <div style={{ fontFamily: FRAUNCES, fontWeight: 700, fontSize: "1.8rem", color: COL.or, lineHeight: 1.1, margin: "6px 0 8px" }}>{analyse.titre}</div>
+            <p style={{ margin: 0, color: COL.creme, fontSize: "0.95rem", lineHeight: 1.5 }}>{analyse.resume}</p>
+          </div>
+
+          {/* Axes */}
+          <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+            {analyse.axes.map((ax) => {
+              const pct = Math.round(((4 - ax.net) / 8) * 100); // net +4 (pôle gauche) → 0% (à gauche) ; net −4 (droite) → 100%
+              return (
+                <div key={ax.cle} style={{ background: COL.panneau, border: `1px solid ${COL.bleu1}`, borderRadius: 14, padding: "12px 14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: 800, marginBottom: 6 }}>
+                    <span style={{ color: ax.net > 0 ? COL.or : COL.texte2 }}>{ax.gauche}</span>
+                    <span style={{ color: ax.net < 0 ? COL.or : COL.texte2 }}>{ax.droite}</span>
+                  </div>
+                  <div style={{ position: "relative", height: 10, background: "rgba(243,232,207,0.1)", borderRadius: 999 }}>
+                    <span style={{ position: "absolute", top: "50%", left: `${pct}%`, transform: "translate(-50%,-50%)", width: 16, height: 16, borderRadius: "50%", background: COL.or, border: "2px solid #14110F" }} />
+                  </div>
+                  <p style={{ margin: "8px 0 0", fontSize: "0.85rem", color: COL.texte2, lineHeight: 1.45 }}>
+                    <strong style={{ color: COL.creme }}>{ax.pole}.</strong> {ax.phrase}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <button onClick={() => setPhase("reglages")} className="pmu-arcade" style={{ width: "100%", marginTop: 18, minHeight: 54 }}>
+            Terminé
+          </button>
+          <p style={{ margin: "10px 2px 0", fontSize: "0.72rem", color: COL.texte2, textAlign: "center", lineHeight: 1.4 }}>
+            Analyse ludique basée sur tes réponses — à prendre avec le sourire, pas comme un diagnostic.
+          </p>
           <div style={{ height: 18 }} />
         </section>
       </>
